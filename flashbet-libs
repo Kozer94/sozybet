@@ -1,0 +1,5334 @@
+/* Minification failed. Returning unminified contents.
+(84,6): run-time error JS1004: Expected ';'
+(85,21): run-time error JS1004: Expected ';'
+(88,17): run-time error JS1004: Expected ';'
+(91,17): run-time error JS1004: Expected ';'
+ */
+//---------Global variables and constants-------------------
+var WebSocketClient = null;
+var SESSION_ID = "";
+var ROOT = "";
+var WEB_SERVER_NAME = "";
+var DATE_FORMAT = "";
+var DATETIME_FORMAT = "";
+var TIME_FORMAT = "";
+var CULTURE = "";
+var CULTURE_NAME = "";
+var USER_ID = "";
+var USERNAME = "";
+var JACKPOT_ACTIVE = "";
+var JACKPOT_TOP_WIDGET_VISIBLE = 0;
+
+var THEME_TEMPLATE = "default";
+var CONST_JackpotWidgetRefreshInterval = 60000;   //miliseconds
+var CONST_JackpotWidgetUpdateInterval = 10000;   //miliseconds
+var CONST_LastWinnersUpdateInterval = 0;   //miliseconds        // 0 = disable
+var CONST_CheckDirectAnnouncementInterval = 60000;   //miliseconds
+var LIVE_STREAM_AUTO_OPEN = true;
+
+var eCasinoGameStartMode =
+{
+    Default: 0,
+    Fullscreen: 1,
+    NewTab: 2,
+    NewWindow: 3,
+    EmbededInSite: 4
+};
+
+var eCasinoGamePromotionType =
+{
+    New: 1,
+    Popular: 2,
+    Hot: 3,
+    Highlighted: 4
+};
+
+var eDirectPaymentTransferStatus =
+{
+    Success: 1,
+    Cancel: 2,
+    InProgress: 3,
+    UserCompleted: 4
+};
+
+//---------Helper function-------------------
+String.prototype.format = function () {
+    var str = this;
+    for (var i = 0; i < arguments.length; i++) {
+        var reg = new RegExp("\\{" + i + "\\}", "gm");
+        str = str.replace(reg, arguments[i]);
+    }
+    return str;
+}
+
+function isZeroEmpty(value) {
+    if (value == undefined || value == null || value == "" || value == 0) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+function isEmpty(value) {
+    if (value == undefined || value == null || value == "") {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+function isNothing(value) {
+    if (value == undefined || value == null) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+async function initGlobalization() {
+    let data = await fetch(`${ROOT}Scripts/cldr/supplemental/likelySubtags.json`).then(res => res.json());
+    Globalize.load(data);
+
+    data = await fetch(`${ROOT}Scripts/cldr/supplemental/numberingSystems.json`).then(res => res.json());
+    Globalize.load(data);
+
+    data = await fetch(`${ROOT}Scripts/cldr/main/${CULTURE}/numbers.json`).then(res => res.json());
+    Globalize.load(data);
+
+    Globalize.locale(CULTURE);
+
+    //$.ajax({
+    //    url: ROOT + 'Scripts/cldr/supplemental/likelySubtags.json',
+    //    type: 'GET',
+    //    async: true,
+    //    success: function (data) {
+    //        Globalize.load(data);
+    //    }
+    //});
+
+    //$.ajax({
+    //    url: ROOT + 'Scripts/cldr/supplemental/numberingSystems.json',
+    //    type: 'GET',
+    //    async: false,
+    //    success: function (data) {
+    //        Globalize.load(data);
+    //    }
+    //});
+
+    //$.ajax({
+    //    url: ROOT + 'Scripts/cldr/main/{0}/numbers.json'.format(CULTURE),
+    //    type: 'GET',
+    //    async: false,
+    //    success: function (data) {
+    //        Globalize.load(data);
+    //    }
+    //});
+
+    Globalize.locale(CULTURE);
+}
+
+function convertToNumeric(value) {
+    try {
+        numericParser = Globalize.numberParser();
+        return numericParser(value);
+    } catch (err) {
+        return 0;
+    }
+}
+function convertToNumeric1(value) {
+    try {
+        numericParser = Globalize.numberParser();
+        var result = numericParser(value);
+        if (isNaN(result))
+            result = 0;
+        return result;
+    } catch (err) {
+        return 0;
+    }
+}
+
+function Round(value) {
+    try {
+        if (!isEmpty(value)) {
+            return value.toFixed(2);
+        }
+    }
+    catch (err) { }
+    return 0;
+}
+
+function formatNumericValue(value, digits, withoutThousandSeparator) {
+    try {
+        if (isEmpty(digits)) digits = 2;
+        if (isEmpty(withoutThousandSeparator)) withoutThousandSeparator = false;
+        if (withoutThousandSeparator)
+            numberFormater = Globalize.numberFormatter({ minimumFractionDigits: digits, maximumFractionDigits: digits, useGrouping: false });
+        else
+            numberFormater = Globalize.numberFormatter({ minimumFractionDigits: digits, maximumFractionDigits: digits });
+        var result = numberFormater(value);
+        return result;
+    } catch (err) {
+        console.log(err);
+        return "";
+    }
+}
+
+function formatDecimalToAmericanOddsValue(value, defaultValue) {
+    if (isNothing(defaultValue)) defaultValue = "";
+    try {
+        if (isEmpty(value)) return defaultValue;
+        if (value <= 1) return defaultValue;
+
+        var numFormater = Globalize.numberFormatter({ minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: false });
+        var res = 0;
+        if (value < 2) {
+            res = -100 / (value - 1);
+            return numFormater(res);
+        }
+        else {
+            res = (value - 1) * 100;
+            return "+" + numFormater(res);
+        }
+    } catch (err) {
+        console.log(err);
+        return defaultValue;
+    }
+}
+
+//----------Models-------------------
+function LiveMatchOddSubscription(liveMatchId, liveMatchOddId) {
+    this.LiveMatchId = liveMatchId;
+    this.LiveMatchOddId = liveMatchOddId;
+}
+
+
+function setCookie(name, value, days) {
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
+
+function getCookie(name) {
+    var dc = document.cookie;
+    var prefix = name + "=";
+    var begin = dc.indexOf("; " + prefix);
+    if (begin == -1) {
+        begin = dc.indexOf(prefix);
+        if (begin != 0) return null;
+    }
+    else {
+        begin += 2;
+        var end = document.cookie.indexOf(";", begin);
+        if (end == -1) {
+            end = dc.length;
+        }
+    }
+    // because unescape has been deprecated, replaced with decodeURI
+    //return unescape(dc.substring(begin + prefix.length, end));
+    return decodeURI(dc.substring(begin + prefix.length, end));
+}
+
+
+function IsMobile() {
+    if (bowser.mobile || bowser.iphone || bowser.android)
+        return true;
+    else
+        return false;
+}
+;
+$(document).ready(function () {
+
+    $("#check_ticket_button").click(function () {
+        CheckTicket();
+    });
+
+    if (USERNAME !== "")
+        GetDirectAnnouncement();
+
+});
+
+function loadBetData(url, targetDataHolder, updateHistory, async, waitSpinner, callback, append, insertFirst, replaceEl) {
+    //console.log(url);
+    if (isNothing(async)) async = true;
+    if (isNothing(waitSpinner)) waitSpinner = true;
+    if (isNothing(append)) append = false;
+    if (isNothing(insertFirst)) insertFirst = false;
+    if (isNothing(replaceEl)) replaceEl = false;
+
+    if (waitSpinner) {
+        $('#dataLoading').show();
+    }
+
+    $.ajax({
+        cache: false,
+        type: "POST",
+        url: url,
+        async: async,
+        data: '',
+        error: function (request, status, error) {
+            console.log("Request: url:'{0}' finished with error.".format(url));
+        }
+    }).done(function (data) {
+        if (!isNothing(targetDataHolder)) {
+            if (append) {
+                targetDataHolder.append(data);
+            } else if (insertFirst) {
+                targetDataHolder.prepend(data);
+            } else if (replaceEl) {
+                targetDataHolder.replaceWith(data);
+            } else {
+                targetDataHolder.html(data);
+            }
+        }
+
+        //if (updateHistory)
+        //window.history.pushState("", "", url);
+
+        if (waitSpinner) {
+            $('#dataLoading').hide();
+        }
+        if (!isNothing(callback)) {
+            callback(data);
+        }
+    }).fail(function (error) {
+        if (waitSpinner) {
+            $('#dataLoading').hide();
+        }
+    });
+}
+
+function executeNonLoad(url, data, async, waitSpinner, callback) {
+    if (isNothing(async)) async = true;
+    if (isNothing(waitSpinner)) waitSpinner = true;
+    if (isNothing(data)) data = '';
+
+    if (waitSpinner) {
+        $('#dataLoading').show();
+    }
+
+    $.ajax({
+        cache: false,
+        type: "POST",
+        url: url,
+        async: async,
+        data: data,
+        error: function (request, status, error) {
+            $('#ModalInfoBoxLabel').html('Error');
+            $('#ModalInfoBoxContent').html(status);
+            $('#ModalInfoBox').modal('show');
+        }
+    }).done(function (result) {
+        if (waitSpinner) {
+            $('#dataLoading').hide();
+        }
+        if (!isNothing(callback)) {
+            callback(result);
+        }
+    }).fail(function (error) {
+        if (waitSpinner) {
+            $('#dataLoading').hide();
+        }
+    });
+}
+
+function CheckTicket() {
+    var ticketCode = $("#check_ticket_code").val();
+    var callFromModal = true;
+    ViewTicketDetails(ticketCode, callFromModal);
+}
+
+function ViewTicketDetails(_ticketCode, _callFromModal) {
+
+    if (!isEmpty(_ticketCode)) {
+        var url = ROOT + 'Ticket/TicketDetailsModal?ticketCode={0}'.format(_ticketCode);
+        loadBetData(url, $("#ModalTicketDetailContent"), false, true, true);
+
+        var timeDelay = 0;
+        if (_callFromModal) {
+            $('#cTicket').modal('hide');
+            timeDelay = 500;
+        }
+
+        $('#ModalTicketDetailLabel').html('Ticket' + ' #' + _ticketCode);
+        setTimeout(function () {
+            $('#ModalTicketDetail').modal('show');
+        }, timeDelay);
+    }
+}
+
+function ChangePassword() {
+    var url = ROOT + 'Account/ChangePassword';
+    $.ajax({
+        cache: false,
+        url: url,
+        data: {},
+        error: function (request, status, error) {
+            $('#errormessageModalChangePassword').html(error);
+        }
+    }).done(function (data) {
+        $('#ModalChangePasswordContent').html(data);
+        $('#ModalChangePassword').modal('show');
+    });
+}
+
+function ResetUserPassword(user_id) {
+    $('#dataLoading').show();
+
+    var url = '../User/ResetPassword';
+
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { userId: user_id },
+        error: function (request, status, error) {
+            $('#ModalResetUserPasswordErrormessage').html(error);
+        }
+    }).done(function (data) {
+        $('#ModalResetUserPasswordContent').html(data);
+        $('#ModalResetUserPassword').modal('show');
+        $('#dataLoading').hide();
+    });
+}
+
+function Deposit() {
+    $('#dataLoading').show();
+
+    var url = ROOT + 'User/Deposit';
+
+    $.ajax({
+        cache: false,
+        url: url,
+        error: function (request, status, error) {
+            $('#errormessageProfilePage').html(error);
+        }
+    }).done(function (data) {
+        //$('#ModalDepositTransaction').html('@LanguageResources.CreateEdit');
+        $('#ModalDepositTransactionContent').html(data);
+        $('#ModalDepositTransactionModalBox').modal('show');
+        $('#dataLoading').hide();
+    });
+}
+
+function RefreshUserBalanceInHeader() {
+    var url = ROOT + 'Account/GetUserBalance';
+    $.ajax({
+        cache: false,
+        url: url,
+        data: {},
+        error: function (request, status, error) {
+
+        }
+    }).done(function (data) {
+        $('.userBalanceInHeader').html(data);
+    });
+}
+
+function SilentPrintTicket(ticketCode, _asHtml) {
+    if (isNothing(_asHtml))
+        _asHtml = false;
+
+    var url = ROOT + 'Report/PrintTicket?ticketCode=' + ticketCode;
+    if (_asHtml)
+        url = ROOT + 'Report/PrintTicketAsHtml?ticketCode=' + ticketCode;
+
+    $('#ticket_report').attr('src', url)
+}
+
+function SlipPosition() {
+    if ($(window).scrollTop() > $('#divTicket').height()) {
+        $('#divTicketSticky').addClass('sticky');
+        if ($('#divTicketSticky').height() > $(window).height()) {
+            $('#divTicketSticky').css('top', 'auto');
+            $('#divTicketSticky').css('bottom', '15px');
+        }
+        else {
+            $('#divTicketSticky').css('top', '15px');
+            $('#divTicketSticky').css('bottom', 'auto');
+        }
+    } else {
+        $('#divTicketSticky').removeClass('sticky');
+    }
+};
+function DirectDeposit(userId) {
+    $('#dataLoading').show();
+    var url = '../User/Payout_DirectDeposit';
+
+    $.ajax({
+        cache: false,
+        url: url,
+        data: {
+            userId: userId,
+            operationMode: 1
+        },
+        error: function (request, status, error) {
+            $('#errormessageProfilePage').html(error);
+            $('#dataLoading').hide();
+        }
+    }).done(function (data) {
+        $('#ModalDirectDepositTransactionContent').html(data);
+        $('#ModalDirectDepositTransactionModalBox').modal('show');
+        $('#dataLoading').hide();
+    });
+}
+
+function Payout(userId) {
+    $('#dataLoading').show();
+    var url = '../User/Payout_DirectDeposit';
+
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { userId: userId, operationMode: 0 },
+        error: function (request, status, error) {
+            $('#errormessageProfilePage').html(error);
+            $('#dataLoading').hide();
+        }
+    }).done(function (data) {
+        $('#ModalPayoutTransactionContent').html(data);
+        $('#ModalPayoutTransactionModalBox').modal('show');
+        $('#dataLoading').hide();
+    });
+}
+
+function updateCollapsePicture(currentEl, id) {
+    setTimeout(function () {
+        
+        if ($(id).attr('aria-expanded') === "true") {
+            $(currentEl).find('img').attr('src', ROOT + "Content/images/Ui/minus-circle.png");
+        } else {
+            $(currentEl).find('img').attr('src', ROOT + "Content/images/Ui/add-circle.png");
+        }
+    }, 100);
+}
+
+function updateCollapsePictureArrow(currentEl, id) {
+    setTimeout(function () {
+        if (THEME_TEMPLATE == 'ProbetDark') {
+
+            if ($(id).attr('aria-expanded') === "true") {
+                $(currentEl).find('img').attr('src', ROOT + "Content/images/ProbetDark/black_arrow.svg");
+            } else {
+                $(currentEl).find('img').attr('src', ROOT + "Content/images/ProbetDark/black_arrow_down.svg");
+            }
+        }
+        else if (THEME_TEMPLATE.toLowerCase() == "asesbet") {
+
+            if ($(id).attr('aria-expanded') === "true") {
+                $(currentEl).find('img').attr('src', ROOT + "Content/images/Asesbet/arrow-up-white.svg");
+            } else {
+                $(currentEl).find('img').attr('src', ROOT + "Content/images/Asesbet/arrow-down-white.svg");
+            }
+        }
+        else {
+            if ($(id).attr('aria-expanded') === "true") {
+                $(currentEl).find('img').attr('src', ROOT + "Content/images/Probet/white_arrow.svg");
+            } else {
+                $(currentEl).find('img').attr('src', ROOT + "Content/images/Probet/white_arrow_down.svg");
+            }
+
+           
+        }
+    }, 100);
+}
+
+function updateCollapsePictureSportCateg(currentEl, id) {
+    setTimeout(function () {
+        if ($(id).hasClass("shown")) {
+            $(currentEl).find('img').attr('src', ROOT + "Content/images/Ui/minus-circle.png");
+        } else {
+            $(currentEl).find('img').attr('src', ROOT + "Content/images/Ui/add-circle.png");
+        }
+    }, 100);
+}
+
+function OpenBonusDetailsForUser(userId, bonusType) {
+    if (isNothing(bonusType))
+        bonusType = 0;      //0 - Bonus, 1 - Free bet
+
+    $('#dataLoading').show();
+    var url = ROOT + 'UserBalance/UserBonusDetails';
+    $.ajax({
+        url: url,
+        type: "get",
+        data: { UserId: userId, BonusType: bonusType },      //0 - Bonus, 1 - Free bet
+        cache: false,
+    }).done(function (data) {
+        if (bonusType == 1)
+            $('#ModalInfoBoxLabel').html(CONST_LanguageResources_UserFreeBetsDetail);
+        else
+            $('#ModalInfoBoxLabel').html(CONST_LanguageResources_UserBonusBalanceDetail);
+
+        $('#ModalInfoBoxContent').html(data);
+        $('#ModalInfoBox').modal('show');
+        $('#dataLoading').hide();
+    });
+}
+
+function getTimeRemaining(endDateTime) {
+    var t = endDateTime - new Date();
+    var seconds = Math.floor((t / 1000) % 60);
+    var minutes = Math.floor((t / 1000 / 60) % 60);
+    var hours = Math.floor((t / (1000 * 60 * 60)) % 24);
+    var days = Math.floor(t / (1000 * 60 * 60 * 24));
+    return {
+        total: t,
+        days: days,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds
+    };
+}
+
+function CheckVoucherForPayout() {
+    $('#dataLoading').show();
+
+    var url = ROOT + 'Voucher/CheckVoucherForPayout';
+
+    $.ajax({
+        cache: false,
+        url: url,
+        error: function (request, status, error) {
+            $('#errormessageProfilePage').html(error);
+        }
+    }).done(function (data) {
+        $('#ModalPaymentBoxLabel').html(CONST_LanguageResources_VoucherPayout);
+        $('#ModalPaymentBoxContent').html(data);
+        $('#ModalPaymentBox').modal('show');
+        $('#dataLoading').hide();
+    });
+}
+
+function ShowVerificationStatus() {
+    $('#dataLoading').show();
+
+    var url = ROOT + 'UserDocument/VerificationUserStatus';
+
+    $.ajax({
+        cache: false,
+        url: url,
+        error: function (request, status, error) {
+            $('#errormessageProfilePage').html(error);
+        }
+    }).done(function (data) {
+        $('#VerificationAccountBoxContent').html(data);
+        $('#VerificationAccountBox').modal('show');
+        $('#dataLoading').hide();
+    });
+}
+
+function JackpotWin(interval) {
+    if (typeof (JACKPOT_CHECK_ACTIVE) != "undefined" && JACKPOT_CHECK_ACTIVE == true) {
+        GetJackpotNotifications();
+        setInterval(GetJackpotNotifications, interval);
+    }
+}
+function GetJackpotNotifications() {
+    var url = ROOT + 'Announcement/GetJackpotNotifications';
+    $.ajax({
+        url: url,
+        type: "post",
+        cache: false,
+    }).done(function (data) {
+        if (data.OK) {
+            $('#jackpotWinId').val(data.jpdata.jackpot_id);
+            $(".jackpot_message").html(data.jpdata.jackpot_message);
+            ShowJackpotWin();
+        } else {
+            console.log(data.error);
+        }
+    });
+}
+
+function ShowJackpotWin() {
+    $('#dataLoading').show();
+
+    var url = ROOT + 'Announcement/GetJackpotNotifications';
+
+    $.ajax({
+        cache: false,
+        url: url,
+        error: function (request, status, error) {
+            $('#errormessageProfilePage').html(error);
+        }
+    }).done(function (data) {
+
+        // $('#ModalJackpotContent').html(data);
+        $('#ModalJackpot').modal('show');
+        $('#dataLoading').hide();
+    });
+}
+function CloseJackpotWin() {
+    var jackpotId = $('#jackpotWinId').val();
+    var url = ROOT + 'Announcement/SetAnnouncementSeen';
+    $.ajax({
+        cache: false,
+        type: "GET",
+        url: url,
+        data: { announcementId: jackpotId },
+        error: function (request, status, error) {
+            toastr["error"](error, "@LanguageResources.Error");
+        }
+    }).done(function (data) {
+        $('#ModalJackpot').modal('hide');
+    });
+}
+
+function AnnouncementSeen(announcementId) {
+    $.ajax({
+        type: "Get",
+        url: ROOT + "Announcement/SetAnnouncementSeen?announcementId=" + announcementId,
+        contentType: "application/json;charset=utf-8",
+        dataType: "json"
+    });
+}
+
+
+function GetDirectAnnouncement() {
+    if (typeof (ANNOUNCEMENT_CHECK_ACTIVE) != "undefined" && ANNOUNCEMENT_CHECK_ACTIVE == true) {
+        console.log("----GetDirectAnnouncement --");
+        $.ajax({
+            type: "Get",
+            url: ROOT + "Announcement/GetAnnouncementsToShow",
+            contentType: "application/json;charset=utf-8",
+            dataType: "json",
+            success: function (result) {
+                if (result.HasDirectAnnouncement == true) {
+                    swal({
+                        title: CONST_LanguageResources_Announcement,
+                        text: result.DirectAnnouncement.Message,
+                        imageUrl: '/Images/message-image-direct-announcement.png',
+                        imageWidth: 145,
+                        imageHeight: 125,
+                        animation: true
+                    }).then(function () {
+                        AnnouncementSeen(result.DirectAnnouncement.AnnouncementId);
+                    }).catch(swal.noop);
+                }
+            }
+        });
+
+        setTimeout(function () {
+            if (!$('body').hasClass('swal2-shown'))
+                GetDirectAnnouncement();
+        }, CONST_CheckDirectAnnouncementInterval);
+    }
+}
+
+function openProvider(id) {
+    sessionStorage.selectedId = id;
+    location.href = '/Casino';
+}
+function openLiveProvider(id) {
+    sessionStorage.selectedId = id;
+    location.href = '/LiveCasino';
+};
+var text = "";
+var MAX_TICKET_PROFIT = 0;
+var MIN_WAGER_PER_COMBINATION = 1;
+
+var TICKET_TYPE_SINGLE = 0;
+var TICKET_TYPE_COMBI = 1;
+var TICKET_TYPE_SYSTEM = 2;
+
+var CONST_RemoveTicketDescriptionTime = 5000;   //miliseconds
+
+function runOnce(clear) {
+    if (!isEmpty($("#tbMoneyPerCombination").val())) {
+        if (isNothing(clear))
+            clear = false;
+
+        var totalTips = convertToNumeric1($("#lblTotalTips").html());
+        var ticketType = GetTicketType();
+
+        var strVal = $("#tbMoneyPerCombination").val();
+        var Val = convertToNumeric(strVal);
+        var parseVal = parseFloat(strVal);      //convertToNumeric vraca nulu za ovakve brojke "12."  , a parseFloat vraca broj 12
+        //zato message za min Wager prikazujem samo ako je i parseFloat manje od minWager
+        var wagerPerCombination = parseFloat(Val);
+
+        if (wagerPerCombination < parseFloat(MIN_WAGER_PER_COMBINATION) && (isNaN(parseVal) || parseVal < parseFloat(MIN_WAGER_PER_COMBINATION)) && strVal !== "0." && strVal !== "0.0") {
+            DisplayMessage(GetMessage_MinWager(), true);
+        }
+
+        var totalAmount = 0;
+
+        switch (ticketType) {
+            case TICKET_TYPE_SINGLE:
+            case TICKET_TYPE_SYSTEM:
+                totalAmount = wagerPerCombination * totalTips;
+                break;
+
+            case TICKET_TYPE_COMBI:
+                totalAmount = wagerPerCombination;
+                break;
+        }
+
+        SetMoney(wagerPerCombination, clear);
+
+        if (clear && wagerPerCombination === parseFloat(MIN_WAGER_PER_COMBINATION)) {
+            $("#tbMoneyPerCombination").val("");
+        }
+
+        $("#tbMoney").val(formatNumericValue(totalAmount, 2));
+        $("#lblTotalStake").html(formatNumericValue(totalAmount, 2));
+    }
+}
+
+function AcceptOddsChanges(value) {
+
+    var url = ROOT + 'Ticket/AcceptOddsChanges';
+    $.ajax({
+        url: url,
+        type: "post",
+        cache: false,
+        data: { acceptOddsChanges: value }
+    }).done(function (data) {
+        if (data.OK) {
+            //                   
+        }
+    });
+};
+
+function GetTicketType() {
+    var ticketType = convertToNumeric1($("#TicketType").val());
+    return ticketType;
+}
+
+function SetMoneyChange(inc) {
+
+    var wagerPerCombination = convertToNumeric1($("#lblWagerPerGroup").html());
+    var totalTips = convertToNumeric1($("#lblTotalTips").html());
+    var ticketType = GetTicketType();
+
+    if (isEmpty(wagerPerCombination)) {
+        wagerPerCombination = 0;    // MIN_WAGER_PER_COMBINATION;
+    }
+
+    wagerPerCombination = parseFloat(wagerPerCombination);
+    var totalAmount = 0;
+
+    switch (ticketType) {
+        case TICKET_TYPE_SINGLE:
+        case TICKET_TYPE_SYSTEM:
+            if ((parseFloat(inc) > 1) && (wagerPerCombination === parseFloat(MIN_WAGER_PER_COMBINATION))) {
+                wagerPerCombination = parseFloat(inc);
+            } else {
+                wagerPerCombination = wagerPerCombination + parseFloat(inc);
+            }
+            wagerPerCombination = wagerPerCombination < parseFloat(MIN_WAGER_PER_COMBINATION) ? parseFloat(MIN_WAGER_PER_COMBINATION) : wagerPerCombination;
+            totalAmount = wagerPerCombination * totalTips;
+            break;
+
+        case TICKET_TYPE_COMBI:
+            if ((parseFloat(inc) > 1) && (wagerPerCombination === parseFloat(MIN_WAGER_PER_COMBINATION))) {
+                wagerPerCombination = parseFloat(inc);
+            } else {
+                wagerPerCombination = wagerPerCombination + parseFloat(inc);
+            }
+            wagerPerCombination = wagerPerCombination < parseFloat(MIN_WAGER_PER_COMBINATION) ? parseFloat(MIN_WAGER_PER_COMBINATION) : wagerPerCombination;
+            totalAmount = wagerPerCombination < parseFloat(MIN_WAGER_PER_COMBINATION) ? parseFloat(MIN_WAGER_PER_COMBINATION) : wagerPerCombination;
+            break;
+    }
+
+    SetMoney(wagerPerCombination);
+}
+
+function SetMoney(value, clear) {
+    if (isNothing(clear))
+        clear = false;
+    if (value == undefined || isNaN(value) || value == null)
+        value = 0;
+
+    var url = ROOT + 'Ticket/SetAmountValue';
+    $.ajax({
+        url: url,
+        type: "post",
+        cache: false,
+        data: { amountPerCombination: formatNumericValue(value, null, true) }
+    }).done(function (data) {
+
+        if (clear) {
+            if (parseFloat(data.WagerPerGroup) <= parseFloat(MIN_WAGER_PER_COMBINATION)) {
+                $("#tbMoneyPerCombination").val("");
+            }
+            $("#tbMoneyPerCombination").focus();
+        } else {
+            if (THEME_TEMPLATE !== "modern" && THEME_TEMPLATE !== "tounes" && THEME_TEMPLATE !== "kenya") {
+                $("#tbMoneyPerCombination").val(formatNumericValue(parseFloat(data.WagerPerGroup), 2));
+            }
+        }
+
+        $("#tbMoney").val(formatNumericValue(parseFloat(data.Amount), 2));
+        $("#lblTotalStake").html($("#tbMoney").val());
+
+        $("#lblTotalTips").html(data.TotalTips);
+        $("#lblTotalBets").html(data.TotalBets);
+        $("#lblWagerPerGroup").html(formatNumericValue(parseFloat(data.WagerPerGroup), 2));
+        $("#lblTotalBonus").html(formatNumericValue(parseFloat(data.TotalBonus), 2));
+        $("#lblTotalWin").html(formatNumericValue(parseFloat(data.TotalWin), 2));
+
+        $("#lblTotalQuota").attr("data-oddvaluedecimal", formatNumericValue(data.TotalQuota));
+        $("#lblTotalQuota").attr("data-oddvalueamerican", formatDecimalToAmericanOddsValue(parseFloat(data.TotalQuota), "-"));
+        if (getCookie("quotetype") === "1")
+            $("#lblTotalQuota").html(formatDecimalToAmericanOddsValue(parseFloat(data.TotalQuota), "-"));
+        else
+            $("#lblTotalQuota").html(formatNumericValue(parseFloat(data.TotalQuota), 2));
+    });
+};
+
+function SetOwnersData() {
+    var owner_name = $('#tbOwnerName').val();
+    var owner_phone = $('#tbOwnerPhone').val();
+
+    if (isEmpty(owner_name) && isEmpty(owner_phone))
+        return;
+
+    var url = ROOT + 'Ticket/SetOwnersData';
+    $.ajax({
+        url: url,
+        type: "post",
+        cache: false,
+        data: { ownerName: owner_name, ownerPhone: owner_phone }
+    }).done(function (data) {
+        if (data.OK) {
+            //      
+        }
+    });
+}
+
+function MaxProfit() {
+    //var quota = convertToNumeric($('#lblTotalQuota').html());
+    var quota = convertToNumeric1($("#lblTotalQuota").attr("data-oddvaluedecimal"));
+    var wagerPerCombination = convertToNumeric1($('#tbMoneyPerCombination').val());
+
+    var totalTips = convertToNumeric1($('#lblTotalTips').text());
+
+    var totalAmount = wagerPerCombination * totalTips;
+
+    var profit = (quota * totalAmount);
+
+    if (profit > convertToNumeric1(MAX_TICKET_PROFIT))
+        profit = convertToNumeric1(MAX_TICKET_PROFIT);
+
+    $("#Amount").val(totalAmount);
+    $('#lblTotalWin').html(formatNumericValue(profit));
+    $('#lblWagerPerGroup').html(formatNumericValue(wagerPerCombination));
+};
+
+function PlaceBetExt(haveBets) {
+    if (haveBets) {
+        $("#divPlaceBet").css("display", "none");
+        $("#divConfirmMessage").css("display", "block");
+        $("#divConfirmBet").css("display", "block");
+        $("#divCancellConfirm").css("display", "block");
+    }
+};
+
+function SaveTicketExt(haveBets, _amount) {
+    if (isNothing(_amount))
+        _amount = 0;
+
+    var url = ROOT + 'Ticket/ConfirmBet';
+
+    var _isMobile = false;
+    if (!isNothing(bowser.mobile) && bowser.mobile)
+        _isMobile = true;
+
+    var owner_name = $('#tbOwnerName').val();
+    var owner_phone = $('#tbOwnerPhone').val();
+
+    if (haveBets) {
+        $('#dataLoading').show();
+        $.ajax({
+            url: url,
+            data: { amountPerCombination: formatNumericValue(_amount, 2, true), mobile: _isMobile, ownerName: owner_name, ownerPhone: owner_phone },
+            type: "post",
+            cache: false,
+        }).done(function (data) {
+            $('#ticket_holder').html(data);
+            $('#dataLoading').hide();
+        });
+    }
+    else {
+        alert("No bets in ticket.");
+        CancelTicket();
+    }
+};
+
+function PreSaveTicketExt(haveBets, _amount) {
+    if (isNothing(_amount))
+        _amount = 0;
+
+    var url = ROOT + 'Ticket/PreConfirmBet';
+    if (haveBets) {
+        $.ajax({
+            url: url,
+            type: "post",
+            cache: false,
+        }).done(function (data) {
+            if (data.OK == true) {
+                if (data.PlaceBetHoldInSec > 0) {
+                    PlaceBetStartCountDown(parseInt(data.PlaceBetHoldInSec));
+                } else {
+                    SaveTicketExt(true, _amount);
+                }
+            }
+
+        });
+    }
+    else {
+        alert("No bets in ticket.");
+        CancelTicket();
+    }
+};
+
+function CancelTicket() {
+    $("#divPlaceBet").css("display", "block");
+    $("#divConfirmMessage").css("display", "none");
+    $("#divConfirmBet").css("display", "none");
+    $("#divCancellConfirm").css("display", "none");
+};
+
+function TicketTypeSingle() {
+    if (!($("#single").hasClass("disabled")) && !($("#single").hasClass("active"))) {
+        showConfirmationDialog();
+    }
+}
+
+function showConfirmationDialog() {
+    $("#confirmation_dialog").removeClass("hidden");
+}
+
+function hideConfirmationDialog() {
+    $("#confirmation_dialog").addClass("hidden");
+}
+
+function TicketTypeSingle_process() {
+    if (!($("#single").hasClass("disabled")) && !($("#single").hasClass("active"))) {
+        var url = ROOT + 'Ticket/EditTicketType';
+        var tip = 0;
+
+        var wagerPerCombination = convertToNumeric1($("#tbMoneyPerCombination").val());
+
+        if (wagerPerCombination < MIN_WAGER_PER_COMBINATION)
+            wagerPerCombination = MIN_WAGER_PER_COMBINATION;
+
+        $.ajax({
+            url: url,
+            type: "post",
+            cache: false,
+            data: {
+                ticketType: tip,
+                amountPerCombination: formatNumericValue(wagerPerCombination, 2, true)
+            }
+        }).done(function (data) {
+            if (THEME_TEMPLATE == "new_theme_template") {
+                $('#ticket_holder').html(data);
+            } else {
+                $('#divTicketSticky').html(data);
+            }
+            $("#combi").removeClass("active");
+            $("#system").removeClass("active");
+            $("#single").addClass("active");
+        });
+    }
+}
+
+function TicketTypeCombi() {
+    if (!($("#combi").hasClass("disabled")) && !($("#combi").hasClass("active"))) {
+        var url = ROOT + 'Ticket/EditTicketType';
+
+        var tip = 1;
+        var wagerPerCombination = convertToNumeric1($("#tbMoneyPerCombination").val());
+        if (wagerPerCombination < MIN_WAGER_PER_COMBINATION)
+            wagerPerCombination = MIN_WAGER_PER_COMBINATION;
+
+        $.ajax({
+            url: url,
+            type: "post",
+            cache: false,
+            data: {
+                ticketType: tip,
+                amountPerCombination: formatNumericValue(wagerPerCombination, 2, true)
+            }
+        }).done(function (data) {
+            if (THEME_TEMPLATE == "new_theme_template") {
+                $('#ticket_holder').html(data);
+            } else {
+                $('#divTicketSticky').html(data);
+            }
+            $("#single").removeClass("active");
+            $("#system").removeClass("active");
+            $("#combi").addClass("active");
+        });
+    }
+};
+
+function TicketTypeSystem() {
+    if (!($("#system").hasClass("disabled") && !($("#system").hasClass("active")))) {
+        var url = ROOT + 'Ticket/EditTicketType';
+        var tip = 2;
+
+        var wagerPerCombination = convertToNumeric1($("#tbMoneyPerCombination").val());
+
+        if (wagerPerCombination < MIN_WAGER_PER_COMBINATION)
+            wagerPerCombination = MIN_WAGER_PER_COMBINATION;
+
+        $.ajax({
+            url: url,
+            type: "post",
+            cache: false,
+            data: {
+                ticketType: tip,
+                amountPerCombination: formatNumericValue(wagerPerCombination,2,true)
+            }
+        }).done(function (data) {
+            if (THEME_TEMPLATE == "new_theme_template") {
+                $('#ticket_holder').html(data);
+            } else {
+                $('#divTicketSticky').html(data);
+            }
+            $("#single").removeClass("active");
+            $("#combi").removeClass("active");
+            $("#system").addClass("active");
+        });
+    }
+};
+
+function EditSystemType(evt) {
+    if (!($("#system").hasClass("disabled") && !($("#system").hasClass("active")))) {
+
+        var url = ROOT + 'Ticket/EditSystemType';
+
+        if (!evt) evt = window.event; // old IE
+        var tgt = evt.target || evt.srcElement;
+
+        var tip = tgt.dataset.system;
+
+        var wagerPerCombination = convertToNumeric1($("#tbMoneyPerCombination").val());
+
+        if (wagerPerCombination < MIN_WAGER_PER_COMBINATION)
+            wagerPerCombination = MIN_WAGER_PER_COMBINATION;
+
+        $.ajax({
+            url: url,
+            type: "post",
+            cache: false,
+            data: {
+                systemType: tip,
+                amountPerCombination: formatNumericValue(wagerPerCombination, 2, true)
+            }
+        }).done(function (data) {
+            $('#divTicketSticky').html(data);
+        });
+    }
+};
+
+function TicketTypeControlsStateExt(
+    betsNo, ticketType, systemNo, amount, wagerPerCombination) {
+
+    if (ticketType == 0) {
+        $("#single").addClass("active");
+    }
+    else {
+        $("#single").removeClass("active");
+    }
+
+    if (ticketType == 1) {
+        $("#combi").addClass("active");
+    }
+    else {
+        $("#combi").removeClass("active");
+    }
+
+    if (ticketType == 2) {
+        $("#system").addClass("active");
+
+        //aktiviranje tipa sistema
+        var systemButton = "#system" + systemNo;
+        $(systemButton).addClass("btn-warning active");
+    }
+    else {
+        $("#system").removeClass("active");
+    }
+
+    if (THEME_TEMPLATE != "tounes" && THEME_TEMPLATE != "marmara" && THEME_TEMPLATE != 'koz' && THEME_TEMPLATE != 'Probet' && THEME_TEMPLATE != 'ProbetDark' && THEME_TEMPLATE != 'Skywin') {
+        if (convertToNumeric1(wagerPerCombination) == parseFloat(MIN_WAGER_PER_COMBINATION)) {
+            wagerPerCombination = ""
+        }
+    }
+
+    $("#tbMoney").val(amount);
+    $("#tbMoneyPerCombination").val(wagerPerCombination);
+    $("#lblTotalStake").html(amount);
+};
+
+function RemoveTicketDescription() {
+    if ($("#divTicketMessage").length > 0) {
+        var url = ROOT + 'Ticket/RemoveTicketDescription';
+        executeNonLoad(url, '', true, false, function (result) {
+            if (result) {
+                $("#divTicketMessage").hide(600);
+            }
+        });
+    }
+};
+
+$.fn.onlyNumeric = function () {
+    return this.each(function () {
+        $(this).keydown(function (e) {
+            var key = e.which || e.keyCode;
+
+            if (!e.shiftKey && !e.altKey && !e.ctrlKey &&
+                // numbers   
+                key >= 48 && key <= 57 ||
+                // Numeric keypad
+                key >= 96 && key <= 105 ||
+                // comma, period and minus, . on keypad
+                key == 190 || key == 188 || key == 109 || key == 110 ||
+                // Backspace and Tab and Enter
+                key == 8 || key == 9 || key == 13 ||
+                // Home and End
+                key == 35 || key == 36 ||
+                // left and right arrows
+                key == 37 || key == 39 ||
+                // Del and Ins
+                key == 46 || key == 45)
+                return true;
+
+            return false;
+        });
+    });
+};
+
+function ClearStake() {
+    var totalTips = convertToNumeric1($("#lblTotalTips").html());
+    var wagerPerCombination = parseFloat(MIN_WAGER_PER_COMBINATION);
+    var amount = wagerPerCombination * totalTips;
+
+    $("#tbMoneyPerCombination").val(formatNumericValue(wagerPerCombination, 2));
+    $("#tbMoney").val(formatNumericValue(amount, 2));
+    $("#lblTotalStake").html($("#tbMoney").val());
+    runOnce(true);
+}
+
+function PlaceBetStartCountDown(wait_seconds) {
+    if (placeBetCountdownActive == false && wait_seconds > 0) {
+        $("#placeBetWaiting").removeClass('hidden');
+
+        placeBetCountdownActive = true;
+        var time = parseInt(wait_seconds);
+        var initialOffset = 314;
+        var i = parseInt(wait_seconds);
+
+        var path = $('#placeBetWaiting .placeBetCountdown .circle_animation');
+
+        //var length = path[0].getTotalLength();  //313.6517333984375
+        var length = 313.6517333984375;
+
+        $('#placeBetCountdownNumber').text(i);
+        path.css('transition', 'none');
+        path.css('-webkit-transition', 'none');
+        path.css('stroke-dasharray', length + ' ' + length);
+        path.css('stroke-dashoffset', length);
+        path[0].getBoundingClientRect();
+        path.css('transition', 'stroke-dashoffset 1s linear');
+        path.css('-webkit-transition', 'stroke-dashoffset 1s linear');
+        path.css('stroke-dashoffset', '0');
+
+        path.css('stroke-dashoffset', initialOffset - (1 * (initialOffset / time)));
+
+
+        var interval = setInterval(function () {
+            i--;
+            $('#placeBetCountdownNumber').text(i);
+            if (i == 0) {
+                clearInterval(interval);
+                SaveTicketExt(true);
+                $("#placeBetWaiting").addClass('hidden');
+                placeBetCountdownActive = false;
+                return;
+            }
+            $('#placeBetWaiting .placeBetCountdown .circle_animation').css('stroke-dashoffset', initialOffset - ((time - i + 1) * (initialOffset / time)));
+
+        }, 1000);
+    }
+};
+
+function ClearTicketAutoPrintCode() {
+    var url = ROOT + 'Ticket/ClearTicketAutoPrintCode';
+    executeNonLoad(url, '', true, false, function (result) {
+    });
+};
+
+function showTicketOnMobile() {
+    $(".main").toggleClass("TicketMobileShow")
+    $(window).scrollTop(0);
+}
+
+function RemoveTicketBetDescription(_matchoddRowElement) {
+
+    setTimeout(function () {
+        if (!isNothing(_matchoddRowElement)) {
+
+            var _matchOddId = _matchoddRowElement.attr("data-matchoddid")
+            var url = ROOT + 'Ticket/RemoveTicketBetDescription';
+            executeNonLoad(url, { '_matchOddId': _matchOddId }, true, false, function (result) {
+                if (result) {
+                    _matchoddRowElement.find(".divTicketRowDescription").remove();
+                }
+            });
+        }
+    }, 3000);
+};
+function showTicketOnMobile() {
+    $(".main").toggleClass("TicketMobileShow")
+    if ($("#menuModal").hasClass('in') && $("#menuModal").css("display") === "block") {
+        $("#menuModal").css("display", "none");
+        $(".modal-backdrop").css("display", "none");
+        $('.mnu_back').attr('onclick', 'closeBetSlip()');
+    }
+    else if ($("#menuModal").hasClass('in')) {
+        closeBetSlip();
+        if ($(".main").hasClass('TicketMobileShow')) {
+            $(".main").removeClass('TicketMobileShow')
+        }
+    }
+    $(window).scrollTop(0);
+}
+
+function closeBetSlip() {
+    //$(".main").removeClass("TicketMobileShow");
+    $(".modal-backdrop").css("display", "block");
+    $("#menuModal").css("display", "block");
+    $(".main").removeClass('TicketMobileShow');
+    if ($('.sport_category_tournaments.shown').length != 0) {
+        $('.mnu_back').attr('onclick', 'collapseTournamentsList()');
+    }
+    else if ($('.sport_categories.shown').length != 0 && !$('.sport_categories.shown').hasClass('universal-categories-div')) {
+        $('.mnu_back').attr('onclick', 'collapseSportCategoryList()');
+    }
+    else {
+        $('.mnu_back').attr('onclick', 'closeSportList()');
+    }
+
+    if ($(".mnu_tickets").hasClass('active')) {
+        $(".mnu_tickets").removeClass('active')
+    }
+    if ($(".mnu_tickets_image").hasClass('active')) {
+        $(".mnu_tickets_image").removeClass('active')
+    }
+}
+function DisplayMessage(textMessage, _remove, _typeOfMessage) {
+    if (isNothing(textMessage))
+        return;
+    if (isNothing(_typeOfMessage))
+        _typeOfMessage = 0;         //0=>ticketMessage,   1=>ticketSuccessMessage
+
+    var classForMessage = 'ticketMessage';
+    if (_typeOfMessage === 1)
+        classForMessage = 'ticketSuccessMessage';
+
+    if ($("#divTicketMessage").length == 0) {
+        if (THEME_TEMPLATE === "new_theme_template") {
+            if ($(".kuponalt").length > 0) {
+                let messageDiv = '<div id="divTicketMessage" class="mbshata"></div>';
+                $(messageDiv).insertBefore(".kuponalt");
+            }
+        } else {
+            if ($(".ticketFooter").length > 0) {
+                let messageDiv = '<div id="divTicketMessage" class="' + classForMessage + ' margin-bottom-6"></div>';
+                $(".ticketFooter").prepend(messageDiv);
+            }
+        }
+    } else {
+        if (THEME_TEMPLATE != "new_theme_template") {
+            if (_typeOfMessage === 1) {
+                $("#divTicketMessage").removeClass('ticketMessage');
+                $("#divTicketMessage").addClass('ticketSuccessMessage');
+            } else {
+                $("#divTicketMessage").removeClass('ticketSuccessMessage');
+                $("#divTicketMessage").addClass('ticketMessage');
+            }
+        }
+    }
+
+    $("#divTicketMessage").html(textMessage);
+    $("#divTicketMessage").css("display", "block");
+
+    if (_remove) {
+        setTimeout(function () {
+            $("#divTicketMessage").hide(600);
+        }, 3000);
+    }
+}
+
+function ShowActiveJackpots() {
+    if (isEmpty(JACKPOT_ACTIVE) || JACKPOT_ACTIVE !== "1")
+        return false;
+
+    var url = ROOT + 'Jackpot/ActiveJackpots';
+    $.ajax({
+        url: url,
+        type: "get",
+        cache: false,
+    }).done(function (data) {
+        if ($('#jackpot_holder').length > 0)
+            $('#jackpot_holder').html(data);
+    });
+}
+
+function ProcessJackpotsAfterBet(savedTicketId) {
+    if (isEmpty(JACKPOT_ACTIVE) || JACKPOT_ACTIVE !== "1")
+        return false;
+
+    if (isEmpty(savedTicketId))
+        return false;
+
+    var selectedJPs = $(".jackpot_type .jackpot_chosen:checked");
+    selectedJPs.each(function (index, element) {
+        var JPType = $(element).attr('data-jackpottype');
+        var JPid = $(element).attr('data-jackpotid');
+        var JPMulti = $(".jackpot_type[data-jackpotid='{0}'] .jackpot-multiplicators [type='radio']:checked".format(JPid)).val();
+        ProcessJackpot(JPType, JPMulti, savedTicketId);
+    });
+
+}
+
+function ProcessJackpot(JPType, JPMulti, ticketCode) {
+    if (isEmpty(JACKPOT_ACTIVE) || JACKPOT_ACTIVE !== "1")
+        return false;
+
+    if (isEmpty(JPType))
+        return false;
+
+    if (isEmpty(JPMulti))
+        JPMulti = 1;
+
+    var url = ROOT + 'Jackpot/ProcessJackpotAfterBet';
+    $.ajax({
+        url: url,
+        type: "POST",
+        data: {
+            JackpotType: JPType,
+            JackpotMultiplicator: JPMulti,
+            TicketCode: ticketCode
+        },
+        cache: false,
+    }).done(function (data) {
+
+        if (data.OK) {
+            toastr["success"](data.message, CONST_LanguageResources_Success);
+        } else {
+            toastr["error"](data.error, CONST_LanguageResources_Error);
+        }
+
+    });
+}
+
+
+function SaveQuickTicket() {
+    var url = ROOT + 'SavedTicket/SaveTicket';
+
+    $('#dataLoading').show();
+    $.ajax({
+        url: url,
+        type: "post",
+        cache: false,
+    }).done(function (data) {
+        $('#dataLoading').hide();
+        if (!isNothing($(data).find("#result_ok")) && $(data).find("#result_ok").val() === "1") {
+
+            var modal_title = "";
+            if (!isNothing($(data).find("#modal_title"))) {
+                modal_title = $(data).find("#modal_title").val();
+            }
+
+            $('#ModalSavedTicketCodeLabel').html(modal_title.toUpperCase());
+            $('#ModalSavedTicketCodeContent').html(data);
+            $('#ModalSavedTicketCode').modal('show');
+
+        } else {
+            var result_message = "";
+            if (!isNothing($(data).find("#result_message"))) {
+                result_message = $(data).find("#result_message").val();
+                DisplayMessage(result_message, true, 0);
+            }
+
+        }
+    });
+}
+
+function LoadSavedTicket(_code) {
+    if (isNothing(_code))
+        return false;
+
+    var url = ROOT + 'SavedTicket/LoadSavedTicket';
+
+    $('#dataLoading').show();
+    $.ajax({
+        url: url,
+        type: "post",
+        cache: false,
+        data: { QuickCode: _code }
+    }).done(function (data) {
+        $('#dataLoading').hide();
+        if (!isNothing(data.OK) && !isNothing(data.responseType) && !isNothing(data.message)) {
+            if (data.OK === false && data.responseType === "SAVED_TICKET_NOT_FOUND") {
+                DisplayMessage(data.message, false, 0);
+            }
+        }
+        else {
+            $('#ticket_holder').html(data);
+            DisplayMessage(CONST_LanguageResources_TicketSuccessfullyLoaded, true, 1);
+        }
+    });
+}
+;
+var placeBetCountdownActive = false;
+var currentLiveWidget_count = 0;
+var CheckedTournamentIdsArray = [];
+var CheckedTournamentSportId = -1;
+var HasSelectedSportCategoryIdsArray = [];
+var clearChosenLeaguesClicked = false;
+
+function sportList(callback) {
+    var filter = $("#HomeBetSearchCriteriaForm").serialize();
+
+    var selectedSportId = $(".sport_list .selected").attr("data-sportid");
+    var betRangeFilter = $("#FilterBetRange").val();
+    var filterDateDay = $("#SelectedDateDay").val();
+
+    if (isEmpty(selectedSportId)) {
+        selectedSportId = $("#SelectedSportId").val();
+    }
+    if (!isEmpty(selectedSportId)) filter += (isEmpty(filter) ? "" : "&") + "SelectedSportId={0}".format(selectedSportId);
+    if (!isEmpty(betRangeFilter)) filter += (isEmpty(filter) ? "" : "&") + "BetRangeFilter={0}".format(betRangeFilter);
+    if (!isEmpty(filterDateDay)) filter += (isEmpty(filter) ? "" : "&") + "DateDay={0}".format(filterDateDay);
+
+    $("#SelectedCategoryId").val("0");
+    $("#SelectedTournamentId").val("0");
+    $("#SelectedTournamentIds").val("");
+
+    var url = ROOT + 'Sport?{0}'.format(filter);
+
+    //$('#dataLoading').show();
+
+    $.ajax({
+        cache: false,
+        type: "POST",
+        url: url,
+        data: '',
+        error: function (request, status, error) {
+            //$('#ModalInfoBoxLabel').html('Error');
+            //$('#ModalInfoBoxContent').html(status);
+            //$('#ModalInfoBox').modal('show');
+            console.log("ERROR in sportList:", error, status);
+        }
+    }).done(function (data) {
+        $('#Sports').html(data);
+        //window.history.pushState("", "", url);
+
+        if (isEmpty($("#SelectedSportId").val())) {
+            var selSportId = $(".sport_list .selected").attr("data-sportid");
+            $("#SelectedSportId").val(selSportId);
+        }
+
+        //$('#dataLoading').hide();
+        if (!isNothing(callback)) {
+            callback();
+        }
+    }).fail(function (error) {
+        //$('#dataLoading').hide();
+    });
+}
+
+function sportListForDuel(callback) {
+    var filter = $("#HomeBetSearchCriteriaForm").serialize();
+
+    var selectedSportId = $(".sport_list .selected").attr("data-sportid");
+
+    if (isEmpty(selectedSportId)) {
+        selectedSportId = $("#SelectedSportId").val();
+    }
+    if (!isEmpty(selectedSportId)) filter += "&SelectedSportId={0}".format(selectedSportId);
+
+    var url = ROOT + 'Sport?{0}'.format(filter);
+
+    $('#dataLoading').show();
+
+    $.ajax({
+        cache: false,
+        type: "POST",
+        url: url,
+        data: { ListForDuel: 1 },
+        error: function (request, status, error) {
+            //$('#ModalInfoBoxLabel').html('Error');
+            //$('#ModalInfoBoxContent').html(status);
+            //$('#ModalInfoBox').modal('show');
+            console.log("ERROR in sportListForDuel:", error, status);
+        }
+    }).done(function (data) {
+        $('#Sports').html(data);
+        //window.history.pushState("", "", url);
+
+        if (isEmpty($("#SelectedSportId").val())) {
+            var selSportId = $(".sport_list .selected").attr("data-sportid");
+            $("#SelectedSportId").val(selSportId);
+        }
+
+        $('#dataLoading').hide();
+        if (!isNothing(callback)) {
+            callback();
+        }
+    }).fail(function (error) {
+        $('#dataLoading').hide();
+    });
+}
+
+function categoryList(isCollapsed) {
+    if (isNothing(isCollapsed)) isCollapsed = false;
+
+    var sportId = $(".sport_list .sport_item.selected").attr("data-sportid");
+
+    if (isEmpty(sportId)) {
+        sportId = $("#SelectedSportId").val();
+    } else {
+        $("#SelectedSportId").val(sportId);
+    }
+
+    if (isEmpty(sportId)) {
+        //$('#CentralDataHolder').html("");
+        return;
+    }
+
+    if (!isCollapsed) {
+        $("div.sport_categories").hide();
+        $("div.sport_categories").removeClass("shown");
+    }
+    var filter = $("#HomeBetSearchCriteriaForm").serialize();
+
+    var selectedCategoryId = $(".category_list .selected").attr("data-sportcategoryid");
+    if (isEmpty(selectedCategoryId)) {
+        selectedCategoryId = $("#SelectedCategoryId").val();
+    }
+    if (!isEmpty(selectedCategoryId)) filter += (isEmpty(filter) ? "" : "&") + "SelectedCategoryId={0}".format(selectedCategoryId);
+
+    var betRangeFilter = $("#FilterBetRange").val();
+    if (!isEmpty(betRangeFilter)) filter += (isEmpty(filter) ? "" : "&") + "BetRangeFilter={0}".format(betRangeFilter);
+
+    var filterDateDay = $("#SelectedDateDay").val();
+    if (!isEmpty(filterDateDay)) filter += (isEmpty(filter) ? "" : "&") + "DateDay={0}".format(filterDateDay);
+
+    var url = ROOT + 'SportCategory?SportId={0}&{1}'.format(sportId, filter);
+
+    //console.log("categoryList ", url);
+
+    var targetDataHolder = $(".sport_categories[data-sportid='{0}']".format(sportId));
+
+    loadBetData(url, targetDataHolder, true, false, true, function () {
+        if (!isCollapsed) {
+            targetDataHolder.addClass("shown");
+            targetDataHolder.slideDown();
+        }
+    });
+
+    //loadBetData(url, $('#CentralDataHolder'), true);
+
+}
+
+function tournamentList() {
+
+    var sportId = $(".sport_list .sport_item.selected").attr("data-sportid");
+    var sportcategoryId = $(".category_list .sportcategory_item.selected").attr("data-sportcategoryid");
+
+    if (isEmpty(sportId)) {
+        sportId = $("#SelectedSportId").val();
+    } else {
+        $("#SelectedSportId").val(sportId);
+    }
+
+    if (isEmpty(sportcategoryId)) {
+        sportcategoryId = $("#SelectedCategoryId").val();
+    } else {
+        $("#SelectedCategoryId").val(sportcategoryId);
+    }
+
+    if (isEmpty(sportId)) {
+        //$('#CentralDataHolder').html("");
+        return;
+    }
+
+    if (isEmpty(sportcategoryId)) {
+        return;
+    }
+
+
+
+    var selectedTournamentId = $("#SelectedTournamentId").val();
+
+    var filter = $("#HomeBetSearchCriteriaForm").serialize();
+
+    if (!isEmpty(selectedTournamentId)) filter += "&SelectedTournamentId={0}".format(selectedTournamentId);
+
+    var betRangeFilter = $("#FilterBetRange").val();
+    if (!isEmpty(betRangeFilter)) filter += (isEmpty(filter) ? "" : "&") + "BetRangeFilter={0}".format(betRangeFilter);
+
+    var filterDateDay = $("#SelectedDateDay").val();
+    if (!isEmpty(filterDateDay)) filter += (isEmpty(filter) ? "" : "&") + "DateDay={0}".format(filterDateDay);
+
+
+    var url = ROOT + 'Tournaments?SportId={0}&SportCategoryId={1}&{2}'.format(sportId, sportcategoryId, filter);
+    var targetDataHolder = $(".sport_category_tournaments[data-sportcategoryid='{0}'][data-sportid='{1}']".format(sportcategoryId, sportId));
+
+    //loadBetData(url, $('#CentralDataHolder'), true);
+
+    loadBetData(url, targetDataHolder, true, false, true, function () {
+        targetDataHolder.addClass("shown");
+        targetDataHolder.slideDown();
+    });
+}
+
+function outrightDetails() {
+
+    var outrightId = $(".outright_list .selected").attr("data-outrightid");
+    var sportId = $(".outright_list .selected").attr("data-sportid");
+    var sportcategoryId = $(".outright_list .selected").attr("data-sportcategoryid");
+
+    if (isEmpty(sportId)) {
+        sportId = $("#SelectedSportId").val();
+    } else {
+        $("#SelectedSportId").val(sportId);
+    }
+
+    if (isEmpty(sportcategoryId)) {
+        sportcategoryId = $("#SelectedCategoryId").val();
+    } else {
+        $("#SelectedCategoryId").val(sportcategoryId);
+    }
+
+    if (isEmpty(outrightId)) {
+        outrightId = $("#SelectedOutrightId").val();
+    } else {
+        $("#SelectedOutrightId").val(outrightId);
+    }
+
+    if (isEmpty(sportId)) {
+        $('#CentralDataHolder').html("");
+        return;
+    }
+
+    if (isEmpty(sportcategoryId) || isEmpty(outrightId)) {
+        return;
+    }
+
+    var filter = $("#HomeBetSearchCriteriaForm").serialize();
+    var url = ROOT + 'Sport/{0}/Category/{1}/Outright/{2}?{3}'.format(sportId, sportcategoryId, outrightId, filter);
+
+    loadBetData(url, $('#CentralDataHolder'), true);
+}
+
+function topMatches(sportId) {
+
+    var url = ROOT;
+    if (isNothing(sportId)) {
+        url += 'Match/TopMatches';
+    }
+    else {
+        url += 'Match/TopMatches?sportId={0}'.format(sportId);
+    }
+    loadBetData(url, $('#TopMatchesList'), false);
+}
+
+function nextMatches(sportId) {
+
+    var url = ROOT;
+    if (isNothing(sportId)) {
+        url += 'Match/NextMatches';
+    }
+    else {
+        url += 'Match/NextMatches?sportId={0}'.format(sportId);
+    }
+    loadBetData(url, $('#NextMatchesList'), false);
+}
+
+function boostMatches(sportId) {
+    //console.log("---boostMatches---")
+    var url = ROOT;
+    if (isNothing(sportId)) {
+        url += 'Match/BoostMatches';
+    }
+    else {
+        url += 'Match/BoostMatches?sportId={0}'.format(sportId);
+    }
+    loadBetData(url, $('#BoostMatchesList'), false);
+}
+
+function mainPage() {
+    if (!($("#MainLobby").length)) {
+        var url = ROOT + 'Home/Main';
+        loadBetData(url, $('#CentralDataHolder'), false);
+    }
+}
+function matchListBoosted(load_more) {
+    //console.log("--matchListBoosted");
+    if (isNothing(load_more))
+        load_more = false;
+
+    if (load_more) {
+        if (isEmpty($("#SelectedCurrentPage").val()))
+            $("#SelectedCurrentPage").val("1");
+        else
+            $("#SelectedCurrentPage").val(parseInt($("#SelectedCurrentPage").val()) + 1);
+    } else {
+        $("#SelectedCurrentPage").val("1");
+    }
+
+    var sportId = $("#SelectedSportId").val();
+    var sportcategoryId = "";
+    var tournamentId = "";
+    var tournamentIds = "";
+    var outrightId = "";
+    var filterTerm = $("#SelectedSearchTerm").val();
+    var filterDateDay = $("#SelectedDateDay").val();
+    var filterBetRangeFilter = $("#BetRangeFilter").val();
+    var filterCodeType = $("#SelectedCodeType").val();
+    var filterCurrentPage = $("#SelectedCurrentPage").val();
+    var chosenMainMarket = $("#SelectedOnlyOneMarket").val();
+    var promotionType = 1;  //BoostMatch = 1
+
+    if (isNothing(chosenMainMarket))
+        chosenMainMarket = -1;
+    else
+        chosenMainMarket = parseInt(chosenMainMarket);
+
+    if (isEmpty(sportId)) {
+        $('#CentralDataHolder').html("");
+        return;
+    }
+
+    //var filter = $("#HomeBetSearchCriteriaForm").serialize();
+    var filter = "";
+    if (!isEmpty(filterTerm))
+        filter = filter + "searchTerm=" + filterTerm;
+
+    if (!isEmpty(filterDateDay))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "DateDay=" + filterDateDay;
+
+    if (!isEmpty(filterBetRangeFilter))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "BetRangeFilter=" + filterBetRangeFilter;
+
+    if (!isEmpty(filterCodeType))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "CodeType=" + filterCodeType;
+
+    if (!isEmpty(filterCurrentPage))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "Page_number=" + filterCurrentPage;
+
+    if (chosenMainMarket > 0)
+        filter = filter + (isEmpty(filter) ? "" : "&") + "onlyOddType=" + chosenMainMarket;
+
+    if (promotionType > 0)
+        filter = filter + (isEmpty(filter) ? "" : "&") + "PromotionType=" + promotionType;
+
+    var url = ROOT + 'Sport/{0}'.format(sportId);
+
+    if (!isEmpty(filter))
+        url = url + '?{0}'.format(filter);
+    //var url = ROOT + 'Sport/{0}/Category/{1}/Tournament/{2}?{3}'.format(sportId, sportcategoryId, tournamentId, filter);
+    //console.log(url);
+    if (load_more) {
+        loadBetData(url, null, true, true, true, function (data) {
+            //var dataForAppend = $(data)[2];
+
+            var dataForAppend = $(data);
+
+            var dataForAppend1 = $(dataForAppend).find(".matchesTableBody").html();
+            if (!isNothing($('#CentralDataHolder').find(".matchesTableBody")))
+                $('#CentralDataHolder').find(".matchesTableBody").append(dataForAppend1);
+
+            if (THEME_TEMPLATE == "new_theme_template") {
+                var dataForAppend2 = $(dataForAppend).find(".matchesTableBodyMobile").html();
+                if (!isNothing($('#CentralDataHolder').find(".matchesTableBodyMobile")))
+                    $('#CentralDataHolder').find(".matchesTableBodyMobile").append(dataForAppend2);
+            }
+
+            if (THEME_TEMPLATE == "modern" ||
+                THEME_TEMPLATE == "tounes" ||
+                THEME_TEMPLATE == "marmara" ||
+                THEME_TEMPLATE == "Probet" ||
+                THEME_TEMPLATE == 'koz' ||
+                THEME_TEMPLATE == "ethiopia" ||
+                THEME_TEMPLATE == "ProbetDark" ||
+                THEME_TEMPLATE == "Skywin" ||
+                THEME_TEMPLATE == "kenya") {
+                var dataForAppend2 = $(dataForAppend).find(".matchesTableBodyMobile").html();
+                if (!isNothing($('#CentralDataHolder').find(".matchesTableBodyMobile")))
+                    $('#CentralDataHolder').find(".matchesTableBodyMobile").append(dataForAppend2);
+            }
+
+            var receivedTorunaments = $(dataForAppend).find(".receivedTournamentCount").val();
+            if (isEmpty(receivedTorunaments))
+                receivedTorunaments = 0;
+
+            initMatchesList(receivedTorunaments);
+            if (receivedTorunaments >= parseInt($("#SelectedTournamentPerPage").val())) {
+                Waypoint.refreshAll();
+                Waypoint.enableAll();
+            } else {
+                //$(".match_load_more_btn").hide();
+            }
+        });
+    } else {
+        $('#CentralDataHolder').html("");
+
+        loadBetData(url, $('#CentralDataHolder'), true, true, true);
+    }
+}
+
+function matchList(load_more, multipleTournament, callback, dataHolderName, insert_above) {
+    var onlyOneSportAllowed = false;
+    if (THEME_TEMPLATE == 'marmara' || THEME_TEMPLATE == 'koz' || THEME_TEMPLATE == 'Probet') {
+        $('body').removeClass('prematch-match-details-full-page');
+        onlyOneSportAllowed = true;
+    }
+
+    if (isEmpty(multipleTournament))
+        multipleTournament = false;
+    if (isEmpty(dataHolderName))
+        dataHolderName = '#CentralDataHolder';
+    if (isEmpty(insert_above))
+        insert_above = true;
+
+    //console.log("--matchList:", load_more, multipleTournament, callback, dataHolderName, insert_above);
+
+    var sportId = $("#SelectedSportId").val();
+    var sportcategoryId = $("#SelectedCategoryId").val() != "0" ? $("#SelectedCategoryId").val() : "";
+    var tournamentId = $("#SelectedTournamentId").val() != "0" ? $("#SelectedTournamentId").val() : "";
+    var tournamentIds = $("#SelectedTournamentIds").val();
+
+    if (isNothing(load_more))
+        load_more = false;
+
+    if (!isEmpty(tournamentIds))
+        multipleTournament = false;
+
+    if (load_more) {
+        if (isEmpty($("#SelectedCurrentPage").val()))
+            $("#SelectedCurrentPage").val("1");
+        else
+            $("#SelectedCurrentPage").val(parseInt($("#SelectedCurrentPage").val()) + 1);
+    } else if (multipleTournament) {
+        var tour_el = $("{3} .matchlist_for_tournament[data-sportid='{0}'][data-sportcategoryid='{1}'][data-tournamentid='{2}']".format(sportId, isEmpty(sportcategoryId) ? 0 : sportcategoryId, isEmpty(tournamentId) ? 0 : tournamentId, dataHolderName));
+
+        //console.log("--matchList multiTour:", load_more, multipleTournament, sportId, sportcategoryId, tournamentId, tournamentIds);
+
+        $("#SelectedCurrentPage").val("1");
+        if ($(".matchlist_for_tournament[data-tournamentid='0']").length > 0 && tour_el.length == 0) {
+            if (onlyOneSportAllowed && $("{0} .matchlist_for_tournament[data-sportid]".format(dataHolderName)).first().attr('data-sportid') != sportId) {
+                $("#SelectedOnlyOneMarket").val('');
+                $(dataHolderName).html("");
+            } else if (getCheckedTournamentsFromArray().length <= 1) {
+                $(dataHolderName).html("");
+            }
+        } else if (onlyOneSportAllowed) {
+            if ($("{0} .matchlist_for_tournament[data-sportid]".format(dataHolderName)).first().attr('data-sportid') != sportId) {
+                $("#SelectedOnlyOneMarket").val('');
+                $(dataHolderName).html("");
+            }
+        }
+        //if (chosenMainMarket > 0) {
+        //    $(dataHolderName).html("");
+        //    console.log("*** brisem 2 choosen");
+        //    $("#SelectedCurrentPage").val("1");
+        //}
+    } else {
+        //console.log("*** brisem 3 else");
+
+        $(dataHolderName).html("");
+        $("#SelectedCurrentPage").val("1");
+    }
+
+    var outrightId = $("#SelectedOutrightId").val();
+    var filterTerm = $("#SelectedSearchTerm").val();
+    var filterDateDay = $("#SelectedDateDay").val();
+    var filterBetRangeFilter = $("#BetRangeFilter").val();
+    var filterCodeType = $("#SelectedCodeType").val();
+    var filterCurrentPage = $("#SelectedCurrentPage").val();
+    var chosenMainMarket = $("#SelectedOnlyOneMarket").val();
+    var tournament_per_page = ''
+
+    if (isNothing(chosenMainMarket))
+        chosenMainMarket = -1;
+    else
+        chosenMainMarket = parseInt(chosenMainMarket);
+
+    if (isEmpty(sportId)) {
+        $(dataHolderName).html("");
+        return;
+    }
+
+    //var filter = $("#HomeBetSearchCriteriaForm").serialize();
+    var filter = "";
+    if (!isEmpty(filterTerm))
+        filter = filter + "searchTerm=" + filterTerm;
+
+    if (!isEmpty(filterDateDay))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "DateDay=" + filterDateDay;
+
+    if (!isEmpty(filterBetRangeFilter))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "BetRangeFilter=" + filterBetRangeFilter;
+
+    if (!isEmpty(filterCodeType))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "CodeType=" + filterCodeType;
+
+    if (!isEmpty(filterCurrentPage))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "Page_number=" + filterCurrentPage;
+
+    if (chosenMainMarket > 0) {
+        filter = filter + (isEmpty(filter) ? "" : "&") + "onlyOddType=" + chosenMainMarket;
+    }
+
+
+
+    var url = ROOT + 'Sport/{0}'.format(sportId);
+
+    if (!isEmpty(sportcategoryId))
+        url = url + '/Category/{0}'.format(sportcategoryId);
+    if (!isEmpty(tournamentIds)) {
+        url = url + '/TournamentIds/{0}'.format(tournamentIds);
+        tournament_per_page = tournamentIds.split(',').length;
+    } else {
+        if (!isEmpty(tournamentId))
+            url = url + '/Tournament/{0}'.format(tournamentId);
+    }
+
+    if (!isEmpty(tournament_per_page))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "Tournament_per_page=" + tournament_per_page;
+
+    if (!isEmpty(filter))
+        url = url + '?{0}'.format(filter);
+    //var url = ROOT + 'Sport/{0}/Category/{1}/Tournament/{2}?{3}'.format(sportId, sportcategoryId, tournamentId, filter);
+    //console.log(url);
+    if (load_more) {
+        loadBetData(url, null, true, true, true, function (data) {
+            //var dataForAppend = $(data)[2];
+
+            var dataForAppend = $(data);
+
+            var dataForAppend1 = $(dataForAppend).find(".matchesTableBody").html();
+            if (!isNothing($(dataHolderName).find(".matchesTableBody")))
+                $(dataHolderName).find(".matchesTableBody").append(dataForAppend1);
+
+            if (THEME_TEMPLATE == "new_theme_template") {
+                var dataForAppend2 = $(dataForAppend).find(".matchesTableBodyMobile").html();
+                if (!isNothing($(dataHolderName).find(".matchesTableBodyMobile")))
+                    $(dataHolderName).find(".matchesTableBodyMobile").append(dataForAppend2);
+            }
+
+            if (THEME_TEMPLATE == "modern" ||
+                THEME_TEMPLATE == "tounes" ||
+                THEME_TEMPLATE == "marmara" ||
+                THEME_TEMPLATE == "Probet" ||
+                THEME_TEMPLATE == 'koz' ||
+                THEME_TEMPLATE == "ethiopia" ||
+                THEME_TEMPLATE == "kenya") {
+                var dataForAppend2 = $(dataForAppend).find(".matchesTableBodyMobile").html();
+                if (!isNothing($(dataHolderName).find(".matchesTableBodyMobile")))
+                    $(dataHolderName).find(".matchesTableBodyMobile").append(dataForAppend2);
+            }
+
+            var receivedTorunaments = $(dataForAppend).find(".receivedTournamentCount").val();
+            if (isEmpty(receivedTorunaments))
+                receivedTorunaments = 0;
+
+            initMatchesList(receivedTorunaments);
+            if (receivedTorunaments >= parseInt($("#SelectedTournamentPerPage").val())) {
+                Waypoint.refreshAll();
+                Waypoint.enableAll();
+            } else {
+                $(".match_load_more_btn").hide();
+            }
+        });
+    } else if (multipleTournament) {
+        if (tour_el.length > 0) {
+            //ovo je kada je vec prikazan tournament pa se klikne na neki odd type
+            loadBetData(url, tour_el, true, true, true, function () {
+                initMatchesList();
+                if (!isEmpty(callback) && typeof (callback) == "function")
+                    callback();
+            }, false, false, true);
+        } else {
+            if (insert_above)
+                loadBetData(url, $(dataHolderName), true, true, true, callback, false, true);
+            else
+                loadBetData(url, $(dataHolderName), true, true, true, callback, true, false);
+        }
+    } else {
+        $(dataHolderName).html("");
+        //$('#popularMatches_wrapper').html("");
+        loadBetData(url, $(dataHolderName), true, true, true);
+        if ($("#popularMatches").length == 0)
+            loadPopularMatches(sportId, tournamentId);
+    }
+}
+
+function duelList(load_more) {
+    if (isNothing(load_more))
+        load_more = false;
+
+    if (load_more) {
+        if (isEmpty($("#SelectedCurrentPage").val()))
+            $("#SelectedCurrentPage").val("1");
+        else
+            $("#SelectedCurrentPage").val(parseInt($("#SelectedCurrentPage").val()) + 1);
+    } else {
+        $("#SelectedCurrentPage").val("1");
+    }
+
+
+    var sportId = $("#SelectedSportId").val();
+    var sportcategoryId = $("#SelectedCategoryId").val();
+    var tournamentId = $("#SelectedTournamentId").val();
+    var outrightId = $("#SelectedOutrightId").val();
+    var filterTerm = $("#SelectedSearchTerm").val();
+    var filterDateDay = $("#SelectedDateDay").val();
+    var filterBetRangeFilter = $("#BetRangeFilter").val();
+    var filterCodeType = $("#SelectedCodeType").val();
+    var filterCurrentPage = $("#SelectedCurrentPage").val();
+    var chosenMainMarket = $("#SelectedOnlyOneMarket").val();
+
+    if (isNothing(chosenMainMarket))
+        chosenMainMarket = -1;
+    else
+        chosenMainMarket = parseInt(chosenMainMarket);
+
+    if (isEmpty(sportId)) {
+        $('#CentralDataHolder').html("");
+        return;
+    }
+
+    //var filter = $("#HomeBetSearchCriteriaForm").serialize();
+    var filter = "";
+    if (!isEmpty(filterTerm))
+        filter = filter + "searchTerm=" + filterTerm;
+
+    if (!isEmpty(filterDateDay))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "DateDay=" + filterDateDay;
+
+    if (!isEmpty(filterBetRangeFilter))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "BetRangeFilter=" + filterBetRangeFilter;
+
+    if (!isEmpty(filterCodeType))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "CodeType=" + filterCodeType;
+
+    if (!isEmpty(filterCurrentPage))
+        filter = filter + (isEmpty(filter) ? "" : "&") + "Page_number=" + filterCurrentPage;
+
+    if (chosenMainMarket > 0)
+        filter = filter + (isEmpty(filter) ? "" : "&") + "onlyOddType=" + chosenMainMarket;
+
+    var url = ROOT + 'Duel/{0}'.format(sportId);
+
+    if (!isEmpty(sportcategoryId))
+        url = url + '/Category/{0}'.format(sportcategoryId);
+    if (!isEmpty(tournamentId))
+        url = url + '/Tournament/{0}'.format(tournamentId);
+    if (!isEmpty(filter))
+        url = url + '?{0}'.format(filter);
+    //var url = ROOT + 'Sport/{0}/Category/{1}/Tournament/{2}?{3}'.format(sportId, sportcategoryId, tournamentId, filter);
+
+    loadBetData(url, $('#CentralDataHolder'), true, true, true, null);
+}
+
+function loadOutrights(sportId, sportCategoryId) {
+    var filter = $("#HomeBetSearchCriteriaForm").serialize();
+    var url = ROOT + 'Tournaments/Outrights?SportId={0}&SportCategoryId={1}&{2}'.format(sportId, sportCategoryId, filter);
+    loadBetData(url, $(".outrights_body"), false);
+}
+
+function loadMatchOdds(matchId, targetDataHolder, callback) {
+    var filter = $("#HomeBetSearchCriteriaForm").serialize();
+    var url = ROOT + 'Match/MatchOdds?matchId={0}&{1}'.format(matchId, filter);
+    loadBetData(url, targetDataHolder, false, true, true, callback);
+}
+
+function loadMatchOddsGrouped(matchId, targetDataHolder, callback) {
+    var url = ROOT + 'Match/MatchOddsGrouped?matchId={0}'.format(matchId);
+    loadBetData(url, targetDataHolder, false, true, true, callback);
+}
+
+function loadMatchTVChannels(matchId, targetDataHolder) {
+    var filter = $("#HomeBetSearchCriteriaForm").serialize();
+    var url = ROOT + 'Match/MatchTVChannels?matchId={0}&{1}'.format(matchId, filter);
+    loadBetData(url, targetDataHolder, false, false);
+    return targetDataHolder.html();
+}
+
+function loadContent() {
+    matchList(null);
+}
+
+function loadDuels() {
+    duelList();
+}
+
+//function loadContent() {
+//    if (!isEmpty($("#SelectedTournamentId").val())) {
+//        categoryList();
+//        matchList();
+//    } else if (!isEmpty($("#SelectedOutrightId").val())) {
+//        categoryList();
+//        outrightDetails();
+//    } else {
+//        if (!isEmpty($("#SelectedCategoryId").val())) {
+//            categoryList();
+//            tournamentList();
+//        } else {
+//            if (!isEmpty($("#SelectedSportId").val())) {
+//                categoryList();
+//                mainPage();
+//                var sportId = $("#SelectedSportId").val();
+//                var currect_category = $(".sport_categories[data-sportid='{0}']".format(sportId));
+//                currect_category.addClass("shown");
+//                currect_category.slideDown();
+//            } else {
+//                mainPage();
+//            }
+//        }
+//    }
+//}
+
+function loadTicket() {
+    var url = ROOT + 'Ticket/Index';
+    loadBetData(url, $('#ticket_holder'), false, true, false);
+}
+
+function loadMyBets() {
+    var url = ROOT + 'Ticket/MyBets';
+    loadBetData(url, $('#mybets_holder'), false, true, false);
+}
+
+function processMatchOdd(matchOddId, deleteBet, callback) {
+    if (isNothing(matchOddId))
+        return;
+    if (isNothing(deleteBet))
+        deleteBet = 1;
+    if (placeBetCountdownActive == false) {
+        var url = ROOT + 'Ticket/ProcessMatchBetOdd?matchOddId={0}&deleteBet={1}'.format(matchOddId, deleteBet);
+        loadBetData(url, $('#ticket_holder'), false, true, false, callback);
+    }
+}
+
+function processOutrightOdd(outrightOddId) {
+    if (placeBetCountdownActive == false) {
+        var url = ROOT + 'Ticket/ProcessOutrightBetOdd?outrightOddId={0}'.format(outrightOddId);
+        loadBetData(url, $('#ticket_holder'), false, true, false);
+    }
+}
+
+function processLiveMatchOdd(liveMatchId, liveMatchOddId, liveMatchOddValueType) {
+    if (isEmpty(liveMatchId) || isEmpty(liveMatchOddId) || isEmpty(liveMatchOddValueType))
+        return false;
+
+    if (placeBetCountdownActive == false) {
+        var url = ROOT + 'Ticket/ProcessLiveMatchBetOdd?liveMatchId={0}&liveMatchOddId={1}&liveMatchOddValueType={2}'.format(encodeURIComponent(liveMatchId), encodeURIComponent(liveMatchOddId), encodeURIComponent(liveMatchOddValueType));
+        loadBetData(url, $('#ticket_holder'), false, true, false);
+    }
+}
+
+function removeAllBetItems() {
+    if (placeBetCountdownActive == false) {
+        var url = ROOT + 'Ticket/RemoveBetItems';
+        loadBetData(url, $('#ticket_holder'), false, true, false);
+    }
+}
+
+function lastTicket() {
+    $('#dataLoading').show();
+    $.ajax({
+        method: 'POST',
+        url: ROOT + 'Ticket/LastTicket',
+        dataType: 'html',
+        success: function (data) {
+            loadTicket();
+            $('#dataLoading').hide();
+        }
+    });
+}
+
+function CopyTicket(ticketId) {
+    $('#dataLoading').show();
+    $.ajax({
+        data: { ticketId: ticketId },
+        method: 'POST',
+        url: ROOT + 'Ticket/CopyTicket',
+        dataType: 'html',
+        success: function (data) {
+            loadTicket();
+            $('#dataLoading').hide();
+        }
+    });
+}
+
+function updateActiveBetItems() {
+    $(".match-odd.active").removeClass('active');
+    $(".outright_odd_item.active").removeClass('active');
+    $(".live-highlights-wrapper .odd.active").removeClass('active');
+
+    $(".ticket-bet-item").each(function (index) {
+        var matchOddId = $(this).attr("data-matchoddid");
+        var outrightOddId = $(this).attr("data-outrightoddid");
+        var liveMatchId = $(this).attr("data-livematchid");
+        var liveMatchOddId = $(this).attr("data-livematchoddid");
+        var liveMatchOddvValueType = $(this).attr("data-livematchoddvaluetype");
+        if (!isEmpty(matchOddId)) {
+            $(".match-odd[data-matchoddid='{0}']".format(matchOddId)).addClass("active");
+        }
+        if (!isEmpty(outrightOddId)) {
+            $(".outright_odd_item[data-outrightoddid='{0}']".format(outrightOddId)).addClass("active");
+        }
+        if (!isEmpty(liveMatchOddId)) {
+            $(".match-odd[data-matchoddid='{0}'][data-matchoddvaluetype='{1}']".format(liveMatchOddId, liveMatchOddvValueType)).addClass("active");
+            $(".live-highlights-wrapper .match-odd[data-matchoddid='{0}'][data-matchoddvaluetype='{1}']".format(liveMatchOddId, liveMatchOddvValueType)).parent().addClass("active");
+        }
+
+    });
+}
+
+//function resultsMatchStatusAll() {
+//    var result_rows = $(".matchFixtureContainer");
+
+//    result_rows.each(function (index, element) {
+//        var resultId = $(element).attr("data-resultid");
+//        var resultStatus = $(element).attr("data-resultstatus");
+//        resultsMatchStatus(resultId, resultStatus);
+//    });
+//}
+
+//function resultsMatchStatus(resultId, resultStatus) {
+//    var resultrow = $(".matchFixtureContainer[data-resultid='{0}']".format(resultid));
+//    switch (parseInt(resultstatus)) {
+//        case 0://Pending             
+//        case "Finished"://Finished
+//            resultrow.find(".result").css('background-color', '#cce5cc');
+//            break;
+//        case 2://Canceled      
+//            resultrow.find(".result").css('background-color', '#cce5cc');
+//            break;
+//        case 3://Delayed      
+//            resultrow.find(".result").css('background-color', '#cce5cc');
+//            break;
+//        case 4://Match will not be played
+//            resultrow.find(".result").css('background-color', '#cce5cc');
+//            break;
+//        default:
+//            resultrow.find(".result").css('background-color', '#cce5cc');
+
+//    }
+//}
+
+function colapseMatchMarket(bet_element) {
+    if (isNothing(bet_element))
+        return;
+
+    var divWithDetails = bet_element.closest('.match_odds_details');
+    if (divWithDetails.length > 0) {
+        var headerMatch = divWithDetails.prev();
+        if (divWithDetails.hasClass("shown")) {
+            divWithDetails.removeClass("shown");
+            //divWithDetails.slideUp(4000);       //, function () { Waypoint.refreshAll(); }
+            if (headerMatch.length > 0) {
+                divWithDetails.hide(400, "", function () { headerMatch.removeClass('details-open'); });
+            } else {
+                divWithDetails.hide(400);
+            }
+        }
+    }
+}
+
+function MoveBalanceFunc(userId, _transType) {
+
+    $('#dataLoading').show();
+    var url = '../User/MoveBalance';
+
+    $.ajax({
+        cache: false,
+        url: url,
+        data: {
+            userId: userId,
+            transactionType: _transType
+        },
+        error: function (request, status, error) {
+            toastr['error'](error, '@LanguageResources.Error');
+            $('#dataLoading').hide();
+        }
+    }).done(function (data) {
+        $('#ModalPayoutTransactionContent').html(data);
+        $('#ModalPayoutTransactionModalBox').modal('show');
+        $('#dataLoading').hide();
+    });
+}
+
+function loadPopularMatches(sportId, tournamentId) {
+
+    if (THEME_TEMPLATE !== "modern" && THEME_TEMPLATE !== "tounes" && THEME_TEMPLATE !== "kenya" && THEME_TEMPLATE !== "marmara" && THEME_TEMPLATE !== "koz" && THEME_TEMPLATE !== "Probet" && THEME_TEMPLATE !== "ethiopia") {
+        return false;
+    }
+
+    //$('#dataLoading').show();
+
+    var url = ROOT + 'Match/PopularMatches?SportId=' + sportId;
+
+    if (!isEmpty(tournamentId))
+        url += "&TournamentId=" + tournamentId;
+
+    var filterDateDay = $("#SelectedDateDay").val();
+    var filterBetRangeFilter = $("#BetRangeFilter").val();
+
+    if (!isEmpty(filterDateDay))
+        url += "&DateDay=" + filterDateDay;
+
+    if (!isEmpty(filterBetRangeFilter))
+        url += "&BetRangeFilter=" + filterBetRangeFilter;
+    //console.log(url);
+    $.ajax({
+        cache: false,
+        type: "GET",
+        url: url,
+        error: function (request, status, error) {
+            //$('#ModalInfoBoxLabel').html('Error');
+            //$('#ModalInfoBoxContent').html(status);
+            //$('#ModalInfoBox').modal('show');
+            console.log("ERROR in loadPopularMatches:", error, status);
+        }
+    }).done(function (data) {
+
+        if (!isNothing($('#popularMatches_wrapper')))
+            $('#popularMatches_wrapper').html(data);
+
+        //$('#dataLoading').hide();
+    });
+}
+
+function loadFeaturedTournaments() {
+    var fromDate = $("#FilterDateDay").val();
+    var toDate = $("#FilterDateDay").val();
+    var betRangeFilter = $("#FilterBetRange").val();
+    var sportId = $("#SelectedSportId").val();
+
+    var search = {
+        SportId: sportId,
+        FromDate: fromDate,
+        ToDate: toDate,
+        BetRangeFilter: betRangeFilter
+    };
+
+    var url = ROOT + 'Tournaments/GetFeaturedTournaments';
+
+    $.ajax({
+        cache: false,
+        type: "GET",
+        url: url,
+        data: search,
+        error: function (request, status, error) {
+            //$('#ModalInfoBoxLabel').html('Error');
+            //$('#ModalInfoBoxContent').html(status);
+            //$('#ModalInfoBox').modal('show');
+            console.log("ERROR in loadFeaturedTournaments:", error, status);
+        }
+    }).done(function (data) {
+        $('#TopLeagues').html(data);
+    }).fail(function (error) {
+        console.log(error);
+    });
+}
+
+function CreateRentPayment() {
+    $('#dataLoading').show();
+    $.ajax({
+        cache: false,
+        url: ROOT + "UserRent/PayRent",
+        error: function (request, status, error) {
+            $('#dataLoading').hide();
+            toastr["error"](error, CONST_LanguageResources_Error);
+        }
+    }).done(function (data) {
+        $('#ModalEditBoxLabel').html(CONST_LanguageResources_RentPay);
+        $('#ModalEditBoxContent').html(data);
+        $('#ModalEditBox').modal('show');
+        $('#dataLoading').hide();
+    });
+}
+
+function ChangeQuoteType(element) {
+    var el = $(element);
+    if (el.attr("data-quotetype") === "0") {
+        el.attr("data-quotetype", "1");     //1=American odds
+        setCookie("quotetype", "1", 365);
+        $(".quoteValue").each(function () {
+            if (!isEmpty($(this).attr("data-oddvalueamerican")))
+                $(this).html($(this).attr("data-oddvalueamerican"));
+            else
+                $(this).html("-");
+        });
+        el.html(CONST_LanguageResources_AmericanQuote);
+    } else {
+        el.attr("data-quotetype", "0");     //0=Decimal odds
+        setCookie("quotetype", "0", 365);
+        $(".quoteValue").each(function () {
+            if (!isEmpty($(this).attr("data-oddvaluedecimal")))
+                $(this).html($(this).attr("data-oddvaluedecimal"));
+            else
+                $(this).html("-");
+        });
+        el.html(CONST_LanguageResources_DecimalQuote);
+    }
+}
+
+function OpenCloseDescription(_this) {
+    var chevron = $(_this).find('.fa');
+    if (chevron.hasClass('fa-chevron-down')) {
+        chevron.removeClass('fa-chevron-down');
+        chevron.addClass('fa-chevron-up');
+        $(_this).next(".description-body").slideDown();
+    } else {
+        chevron.addClass('fa-chevron-down');
+        chevron.removeClass('fa-chevron-up');
+        $(_this).next(".description-body").slideUp();
+    }
+}
+
+function OpenCloseChevron(_this) {
+    var chevron = $(_this).find('.fa');
+    if (chevron.hasClass('fa-chevron-down')) {
+        chevron.removeClass('fa-chevron-down');
+        chevron.addClass('fa-chevron-up');
+        $(_this).closest("tr").nextUntil("tr.header_tournament_row").show();
+        $("tr.match_odds_details").hide();
+    } else {
+        chevron.addClass('fa-chevron-down');
+        chevron.removeClass('fa-chevron-up');
+        $(_this).closest("tr").nextUntil("tr.header_tournament_row").hide();
+    }
+}
+
+function OpenCloseChevronLive(_this) {
+    var chevron = $(_this).find('.fa');
+    if (chevron.hasClass('fa-chevron-down')) {
+        chevron.removeClass('fa-chevron-down');
+        chevron.addClass('fa-chevron-up');
+        $(_this).closest("tr").nextUntil("tr.live_match_list_header").show();
+        $("tr.match_odds_details").attr('style', 'display: none !important');
+    } else {
+        chevron.addClass('fa-chevron-down');
+        chevron.removeClass('fa-chevron-up');
+        $(_this).closest("tr").nextUntil("tr.live_match_list_header").attr('style', 'display: none !important');
+    }
+}
+
+function loadSportsbookCurrentWinners() {
+    var url = ROOT + 'Home/CurrentWinners';
+    loadBetData(url, $('#current_winners'), false, true, false, UpdateCurrentWinnersSportBook);
+}
+function loadCasinoCurrentWinners() {
+    var url = ROOT + 'Casino/CurrentWinners';
+    loadBetData(url, $('#current_winners'), false, true, false, UpdateCurrentWinnersCasino);
+}
+function loadLiveCasinoCurrentWinners() {
+    var url = ROOT + 'LiveCasino/CurrentWinners';
+    loadBetData(url, $('#current_winners'), false, true, false, UpdateCurrentWinnersLiveCasino);
+}
+
+
+
+function UpdateCurrentWinnersSportBook() {
+    if (CONST_LastWinnersUpdateInterval > 0) {
+        setTimeout(function () {
+            UpdateCurrentWinners_process("sportbook");
+        }, CONST_LastWinnersUpdateInterval);
+    }
+}
+
+function UpdateCurrentWinnersCasino() {
+    if (CONST_LastWinnersUpdateInterval > 0) {
+        setTimeout(function () {
+            UpdateCurrentWinners_process("casino");
+        }, CONST_LastWinnersUpdateInterval);
+    }
+}
+function UpdateCurrentWinnersLiveCasino() {
+    if (CONST_LastWinnersUpdateInterval > 0) {
+        setTimeout(function () {
+            UpdateCurrentWinners_process("liveCasino");
+        }, CONST_LastWinnersUpdateInterval);
+    }
+}
+
+function UpdateCurrentWinners_process(type) {
+
+    var url = ROOT;
+    var class_Name = "";
+    if (type === "sportbook") {
+        url = url + 'Home/CurrentWinnersUpdate';
+        class_Name = ".last-highest-winners-sportbook";
+    } else if (type === "casino") {
+        url = url + 'Casino/CurrentWinnersUpdate';
+        class_Name = ".last-highest-winners-casino";
+    } else if (type === "liveCasino") {
+        url = url + 'LiveCasino/CurrentWinnersUpdate';
+        class_Name = ".last-highest-winners-livecasino";
+    }
+
+    $.ajax({
+        url: url,
+        type: "POST",
+        //data: { },
+        cache: false
+    }).done(function (data) {
+        if (data.OK) {
+            if (data.Winners.length > 0) {
+                if ($(class_Name).length > 0) {
+                    for (var i = 0; i < data.Winners.length; i++) {
+                        var Win_place = data.Winners[i].Place;
+                        var Win_username = data.Winners[i].Username;
+                        var Win_points = data.Winners[i].WinningAmount;
+
+                        $("{0} li[data-place='{1}'] .user-name".format(class_Name, Win_place)).html(Win_username);
+
+                        var winnerAmountContainer = $("{0} li[data-place='{1}'] .winner-amount".format(class_Name, Win_place));
+                        //winnerAmountContainer.html(formatNumericValue(Win_points));
+                        if (winnerAmountContainer.length > 0)
+                            winnerAmountContainer.dynamicNumber('go', Win_points);
+
+                    }
+                }
+            } else {
+                console.log("No winners data");
+            }
+        } else {
+            console.log(data.error);
+        }
+        //setTimeout(function () { UpdateCurrentWinners_process(type); }, CONST_LastWinnersUpdateInterval);
+    });
+}
+
+function UpdateSlotsOfTheDay_process() {
+
+    var url = ROOT;
+    var class_Name = ".slots-of-the-day";
+    url = url + 'Casino/SlotsOfTheDay';
+
+    $.ajax({
+        url: url,
+        type: "POST",
+        //data: { },
+        cache: false
+    }).done(function (data) {
+
+        $("#slotsOfTheDay").html(data);
+    });
+}
+
+function TogleJackpotWidgetTop(_height) {
+    if (isEmpty(_height))
+        return false;
+
+    if ($("#Jackpot_widget_top").hasClass('collapsed')) {
+        $("#Jackpot_widget_top").removeClass('collapsed');
+        $("#Jackpot_widget_top .jackpot-navigation-button i").removeClass("fa-chevron-down");
+        $("#Jackpot_widget_top .jackpot-navigation-button i").addClass("fa-chevron-up");
+        $("#Jackpot_widget_top").css({ "-webkit-transform": "translate(-50%,{0}px)".format(_height), "-ms-transform": "translate(-50%,{0}px)".format(_height), "transform": "translate(-50%,{0}px)".format(_height) });
+    } else {
+        $("#Jackpot_widget_top").addClass('collapsed');
+        $("#Jackpot_widget_top .jackpot-navigation-button i").removeClass("fa-chevron-up");
+        $("#Jackpot_widget_top .jackpot-navigation-button i").addClass("fa-chevron-down");
+        $("#Jackpot_widget_top").css({ "-webkit-transform": "translate(-50%,0px)", "-ms-transform": "translate(-50%,0px)", "transform": "translate(-50%,0px)" });
+    }
+}
+
+function GetJackpotsWidgetTop() {
+    if (JACKPOT_TOP_WIDGET_VISIBLE === 0)
+        $("#Jackpot_widget_top").addClass('hidden');
+
+    if (isEmpty(JACKPOT_ACTIVE) || JACKPOT_ACTIVE !== "1") {
+        $("#Jackpot_widget_top").addClass('hidden');
+        return false;
+    }
+
+    var url = ROOT + 'Jackpot/ActiveJackpots?WidgetView=1';
+    $.ajax({
+        url: url,
+        type: "get",
+        cache: false,
+    }).done(function (data) {
+        if ($("#Jackpot_widget_top").length > 0) {
+            if (isEmpty(data)) {
+                $("#Jackpot_widget_top").addClass('hidden');
+            } else {
+                if (JACKPOT_TOP_WIDGET_VISIBLE === 1)
+                    $("#Jackpot_widget_top").removeClass('hidden');
+                $('#Jackpot_widget_top_content').html(data);
+            }
+        }
+    });
+}
+
+function GetJackpotsWidget() {
+    if (isEmpty(JACKPOT_ACTIVE) || JACKPOT_ACTIVE !== "1")
+        return false;
+
+    var url = ROOT + 'Jackpot/ActiveJackpots?WidgetView=2';
+    $.ajax({
+        url: url,
+        type: "get",
+        cache: false,
+    }).done(function (data) {
+        if ($('#Jackpot_widget_content').length > 0)
+            $('#Jackpot_widget_content').html(data);
+    });
+}
+
+function UpdateJackpotAmounts() {
+    if (isEmpty(JACKPOT_ACTIVE) || JACKPOT_ACTIVE !== "1")
+        return false;
+
+    var $jps = $("#Jackpot_widget_top .JP-widget");
+    if ($jps.length > 0) {
+        var JPList = [];
+        $jps.each(function (index, element) {
+            JPList.push(convertToNumeric1($(this).attr('data-jackpotid')));
+        });
+        if (JPList.length > 0) {
+            var url = ROOT + 'Jackpot/UpdateJPsAmount';
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: { JPList: JPList },
+                cache: false
+            }).done(function (data) {
+                if (data.OK) {
+                    if (data.JPAmounts.length > 0) {
+                        for (var i = 0; i < data.JPAmounts.length; i++) {
+                            var JP_id = data.JPAmounts[i].Id;
+                            var JP_amount = data.JPAmounts[i].JackpotAmount;
+
+                            var topJPWidgetAmount = $("#Jackpot_widget_top .JP-widget[data-jackpotid='{0}'] .JP_amount".format(JP_id));
+                            if (topJPWidgetAmount.length > 0)
+                                topJPWidgetAmount.dynamicNumber('go', JP_amount);
+
+                            var centerJPWidgetAmount = $(".JP-widget-center[data-jackpotid='{0}'] .JP_amount".format(JP_id));
+                            if (centerJPWidgetAmount.length > 0)
+                                centerJPWidgetAmount.dynamicNumber('go', JP_amount);
+                        }
+                    } else {
+                        console.log("No JPS data");
+                    }
+                } else {
+                    console.log(data.error);
+                }
+
+            });
+        }
+    }
+}
+
+
+function copyToClipboard(elem) {
+    // create hidden text element, if it doesn't already exist
+    var targetId = "_hiddenCopyText_";
+    var isInput = elem.tagName === "INPUT" || elem.tagName === "TEXTAREA";
+    var origSelectionStart, origSelectionEnd;
+    if (isInput && !elem.disabled) {
+        // can just use the original source element for the selection and copy
+        target = elem;
+        origSelectionStart = elem.selectionStart;
+        origSelectionEnd = elem.selectionEnd;
+    } else {
+        // must use a temporary form element for the selection and copy
+        target = document.getElementById(targetId);
+        if (!target) {
+            var target = document.createElement("textarea");
+            target.style.position = "absolute";
+            target.style.left = "-9999px";
+            target.style.top = "0";
+            target.id = targetId;
+            document.body.appendChild(target);
+        }
+        if (isInput)
+            target.textContent = elem.value;
+        else
+            target.textContent = elem.textContent;
+    }
+    // select the content
+    var currentFocus = document.activeElement;
+    target.focus();
+    target.setSelectionRange(0, target.value.length);
+
+    // copy the selection
+    var succeed;
+    try {
+        succeed = document.execCommand("copy");
+    } catch (e) {
+        succeed = false;
+    }
+    // restore original focus
+    if (currentFocus && typeof currentFocus.focus === "function") {
+        currentFocus.focus();
+    }
+
+    if (isInput) {
+        // restore prior selection
+        elem.setSelectionRange(origSelectionStart, origSelectionEnd);
+    } else {
+        // clear temporary content
+        target.textContent = "";
+    }
+    return succeed;
+}
+
+function openFullscreen(_elementId) {
+    if (isNothing(_elementId))
+        return false;
+    let elem = document.getElementById(_elementId);
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) { /* Firefox */
+        elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE/Edge */
+        elem.msRequestFullscreen();
+    }
+}
+
+function playCasinoGame(gameName, casinoId, gameId, mobile, gameStartMode, userIsAuthenticated, calledFrom) {       // ova f-ja se poziva iz svih casina i iz menija kad treba da se startuje igra
+    var _mobile = false;
+    if (mobile === 1 || mobile === "1")
+        _mobile = true;
+    else
+        _mobile = false;
+
+    if (isEmpty(calledFrom))
+        calledFrom = "casino";
+
+    if (userIsAuthenticated !== 1 && userIsAuthenticated !== "1") {
+        if (calledFrom === "casino")
+            window.location = ROOT + 'Account/Login?ReturnUrl=/Casino?mobile=' + _mobile;
+        else
+            window.location = ROOT + 'Account/Login';
+        return false;
+    }
+
+    //Na mobilnom se igra otvara uvek u novom tabu
+    if (_mobile) {
+
+        //if (bowser.iphone != true) {
+        //    window.open("{0}/Game/Play?gameId={1}_{2}_{3}_{4}".format(window.location.origin, casinoId, gameId, mobile, 0), '_blank').focus();
+        //} else {
+        var _url = '';
+        $.ajax({
+            method: 'GET',
+            url: ROOT + "Game/Play?gameId={0}_{1}_{2}_{3}&getOnlyUrl=true".format(casinoId, gameId, mobile, 0),
+            dataType: 'json',
+            async: false,
+            success: function (data) {
+                if (data.OK) {
+                    _url = data.gameUrl;
+                } else {
+                    console.log("Error Game/play. message=" + data.error);
+                }
+            }
+        });
+
+        if (!isNothing(_url)) {
+            window.open(_url, '_blank').focus();
+        } else {
+            window.open("{0}/Game/Play?gameId={1}_{2}_{3}_{4}".format(window.location.origin, casinoId, gameId, mobile, 0), '_blank').focus();
+        }
+        //}
+        return;
+    }
+
+    //Ako je podeseno da se igra otvara u novom tabu ili u novom prozoru onda to ide direktno redirekcijom
+    if (gameStartMode === eCasinoGameStartMode.NewTab || gameStartMode === eCasinoGameStartMode.NewTab.toString()) {
+        window.open("{0}/Game/Play?gameId={1}_{2}_{3}_{4}".format(window.location.origin, casinoId, gameId, mobile, 0), '_blank').focus();
+        return;
+    } else if (gameStartMode === eCasinoGameStartMode.NewWindow || gameStartMode === eCasinoGameStartMode.NewWindow.toString()) {
+        window.open("{0}/Game/Play?gameId={1}_{2}_{3}_{4}".format(window.location.origin, casinoId, gameId, mobile, 0), '_blank', "toolbar=no,scrollbars=yes,menubar=no,location=no,resizable=yes,fullscreen=yes").focus();
+        return;
+    } else if (gameStartMode === eCasinoGameStartMode.EmbededInSite || gameStartMode === eCasinoGameStartMode.EmbededInSite.toString()) {
+        window.location = "{0}/Game/Play?gameId={1}_{2}_{3}_{4}".format(window.location.origin, casinoId, gameId, mobile, 0);
+        return;
+    }
+
+    //Ako je podeseno da se igra otvara u modalu ili full screan onda se dobavlja url pa se pokrece u iFrame
+    var url = '/Casino/GetSession';
+    $.ajax({
+        type: 'POST',
+        cache: false,
+        url: url,
+        data: {
+            casinoId: casinoId,
+            gameId: gameId,
+            mobile: _mobile
+        },
+        dataType: "json",
+        error: function (request, status, error) {
+            toastr.error(error, 'Error');
+        }
+    }).done(function (data) {
+        if (data.OK) {
+
+            var gameUrl = data.gameUrl;
+            var jackpotWidgetUrl = data.JackpotWidgetUrl;
+            gameStartMode = data.gameStartMode;
+
+            if (isEmpty(gameUrl)) {
+                console.log("Error: No game URL");
+                return;
+            }
+
+            if (location.protocol === "https:") {
+                gameUrl = gameUrl.replace("http:", "https:");
+            }
+
+            $("#ModalCasinoGameNewContent .casinoJackpotWidgetWrapper").remove();
+
+            var htmlJPWidgetElement = "";
+            if (!isEmpty(jackpotWidgetUrl)) {
+                htmlJPWidgetElement = `<div class="casinoJackpotWidgetWrapper"><iframe id="CasinoJackpotIframe" src="{0}"></iframe></div>`.format(jackpotWidgetUrl);
+                $("#ModalCasinoGameNewContent").addClass('hasJackpotWidget');
+                $("#ModalCasinoGameNewContent").prepend(htmlJPWidgetElement)
+            } else {
+                $("#ModalCasinoGameNewContent").removeClass('hasJackpotWidget');
+            }
+
+            switch (gameStartMode) {
+                case (eCasinoGameStartMode.Fullscreen):
+                case (eCasinoGameStartMode.Fullscreen.toString()):
+                    $("#ModalCasinoGameNewLabel").html(gameName);
+                    $("#ModalCasinoGameNewIframe").attr("src", gameUrl);
+                    $("#ModalCasinoGameNew").modal({ show: true, backdrop: 'static', keyboard: false });
+                    openFullscreen('ModalCasinoGameNewContent');
+                    break;
+                case (eCasinoGameStartMode.NewTab):
+                case (eCasinoGameStartMode.NewTab.toString()):
+                case (eCasinoGameStartMode.NewWindow):
+                case (eCasinoGameStartMode.NewWindow.toString()):
+                    //ovo ide na drugi nacin
+                    break;
+                case (eCasinoGameStartMode.Default):
+                case (eCasinoGameStartMode.Default.toString()):
+                default:
+                    $("#ModalCasinoGameNewLabel").html(gameName);
+                    $("#ModalCasinoGameNewIframe").attr("src", gameUrl);
+                    $("#ModalCasinoGameNew").modal({ show: true, backdrop: 'static', keyboard: false });
+            }
+        }
+        else {
+            toastr.error(data.error, 'Error');
+        }
+    });
+}
+
+function CloseModalCasinoGame() {
+    $("#ModalCasinoGameNewIframe").attr("src", "");
+}
+
+
+
+function displayOnlyOneMarketForTournament(_sportId, _sportCategoryId, _tournamentId, _market) {
+    if (isEmpty(_sportId) || isEmpty(_market))
+        return false;
+    //console.log("kliknut market ", _sportId, _sportCategoryId, _tournamentId, _market);
+
+    $("#CentralDataHolder_wraper").attr('data-onlyoddtypeid', _market);
+
+    var header_filters_el = $(".market-filter-header-menu-section ");
+    if (header_filters_el.length > 0 && !isEmpty(_market)) {
+        header_filters_el.find(".odd-types-in-group-menu span").removeClass('active');
+        header_filters_el.find(".odd-types-in-group-menu span[data-oddtypeid='{0}']".format(_market)).addClass("active");
+    }
+
+    $("#SelectedSportId").val(_sportId);
+    $("#SelectedCategoryId").val(_sportCategoryId);
+    $("#SelectedTournamentId").val('');
+    $("#SelectedOnlyOneMarket").val(_market);
+
+    var selectedArray = getSelectedTournaments();
+
+    if (selectedArray.length > 0)
+        $("#SelectedTournamentIds").val(selectedArray.join(','));
+    else
+        $("#SelectedTournamentIds").val("");
+
+    $("#CentralDataHolder").next(".loader").show();
+
+    matchList(null, true, function () { $("#CentralDataHolder").next(".loader").hide(); });
+}
+
+function onClickGroupingItemForTournament(_sportId, _sportCategoryId, _tournamentId, _group, this_el) {
+    //console.log("kliknuta grupa ", _sportId, _sportCategoryId, _tournamentId, _group);
+
+    $("#CentralDataHolder_wraper").attr('data-groupid', _group);
+
+    var header_filters_el = $(".market-filter-header-menu-section ");
+    if (header_filters_el.length > 0 && !isEmpty(_group)) {
+        header_filters_el.find(".odd-type-group-header-menu span").removeClass('selected');
+        $(this_el).addClass("selected");
+
+        header_filters_el.find(".odd-types-in-group-menu").removeClass("active");
+        header_filters_el.find(".odd-types-in-group-menu[data-groupid='{0}']".format(_group)).addClass("active");
+
+        ReinitializeSlickForMainFilters();
+
+        if (_group == -1) {
+            displayOnlyOneMarketForTournament(_sportId, _sportCategoryId, _tournamentId, _group);
+        } else {
+            var first_market = header_filters_el.find(".odd-types-in-group-menu[data-groupid='{0}'] span".format(_group)).first();
+            if (first_market.length > 0)
+                first_market.click();
+        }
+    }
+}
+
+
+function changeSpreadForMarketMatchArrow(element, direction, currentSpreadOverride) {
+    if (isEmpty(direction))
+        return false;
+
+    if (isNothing(element))
+        return false;
+
+    var parentTd = element.parent().parent();
+    var numOfSpreads = parentTd.attr('data-spreadcount');
+    var currentSpreadNo = parentTd.attr('data-spreadno');
+    var currentMatchId = parentTd.attr('data-matchid');
+    var currentOddTypeId = parentTd.attr('data-oddtypeid');
+
+    if (!isEmpty(currentSpreadOverride)) {
+        currentSpreadNo = currentSpreadOverride;
+    }
+
+    if (!isEmpty(numOfSpreads)) {
+        numOfSpreads = parseInt(numOfSpreads);
+        if (!isEmpty(currentSpreadNo)) {
+            currentSpreadNo = parseInt(currentSpreadNo);
+            var newSpreadNo = 0;
+
+            if (direction > 0)
+                newSpreadNo = currentSpreadNo + 1;
+            else
+                newSpreadNo = currentSpreadNo - 1;
+
+            if (newSpreadNo >= numOfSpreads) newSpreadNo = numOfSpreads - 1;
+
+            if (newSpreadNo < 0) newSpreadNo = 0;
+
+            if (!$(".match_odd.match-odd[data-matchid='{0}'][data-oddtypeid='{1}'][data-spreadno='{2}']".format(currentMatchId, currentOddTypeId, newSpreadNo)).text() &&
+                newSpreadNo <= numOfSpreads) {
+                changeSpreadForMarketMatchArrow(element, direction, newSpreadNo)
+            }
+            else {
+                $(".match_odd.match-odd[data-matchid='{0}'][data-oddtypeid='{1}']:not([data-spreadno='{2}'])".format(currentMatchId, currentOddTypeId, newSpreadNo)).addClass("hidden");
+                $(".match_odd.match-odd[data-matchid='{0}'][data-oddtypeid='{1}'][data-spreadno='{2}']".format(currentMatchId, currentOddTypeId, newSpreadNo)).removeClass("hidden");
+                $(".special-bet-prematch[data-matchid='{0}'][data-oddtypeid='{1}']:not([data-spreadno='{2}'])".format(currentMatchId, currentOddTypeId, newSpreadNo)).addClass("hidden");
+                $(".special-bet-prematch[data-matchid='{0}'][data-oddtypeid='{1}'][data-spreadno='{2}']".format(currentMatchId, currentOddTypeId, newSpreadNo)).removeClass("hidden");
+            }
+
+            //console.log(" * * changeSpreadForMarketMatchArrow podeseno na spreadNo=" + newSpreadNo + "od " + numOfSpreads);
+        }
+    }
+}
+
+function changeSpreadForMarketPreMatch(currentOddTypeId, newSpreadNo) {
+    currentOddTypeId = $("#CentralDataHolder_wraper").attr('data-onlyoddtypeid');
+    if (isEmpty(currentOddTypeId))
+        return false;
+
+    if (!isEmpty(newSpreadNo)) {
+
+        console.log("change spread ", currentOddTypeId, newSpreadNo)
+
+        $(".quoteValue[data-oddtypeid='{1}']:not([data-spreadno='{0}'])".format(newSpreadNo, currentOddTypeId)).addClass("hidden");
+        $(".quoteValue[data-oddtypeid='{1}'][data-spreadno='{0}']".format(newSpreadNo, currentOddTypeId)).removeClass("hidden");
+        $(".quoteValueParent[data-oddtypeid='{1}']:not([data-spreadno='{0}'])".format(newSpreadNo, currentOddTypeId)).addClass("hidden");
+        $(".quoteValueParent[data-oddtypeid='{1}'][data-spreadno='{0}']".format(newSpreadNo, currentOddTypeId)).removeClass("hidden");
+        $(".special-bet-prematch[data-oddtypeid='{1}']:not([data-spreadno='{0}'])".format(newSpreadNo, currentOddTypeId)).addClass("hidden");
+        $(".special-bet-prematch[data-oddtypeid='{1}'][data-spreadno='{0}']".format(newSpreadNo, currentOddTypeId)).removeClass("hidden");
+
+        //console.log(" * * changeSpreadForMarketPreMatch podeseno na spreadNo=" + newSpreadNo );
+    }
+}
+
+function OpenAllSpreadsForMarketPreMatch(matchId, currentOddTypeId, el) {
+
+    if (isEmpty(matchId) || isEmpty(currentOddTypeId))
+        return false;
+
+    $(".trMatch[data-matchid='{0}'] .spread-wrapper.most_balanced".format(matchId, currentOddTypeId)).removeClass("most_balanced");
+    $(el).parent().addClass("most_balanced");
+
+    //console.log("open all spreads ", currentOddTypeId, matchId);
+
+    if ($(".trMatch[data-matchid='{0}'] .hidden.quoteValueParent[data-oddtypeid='{1}']".format(matchId, currentOddTypeId)).length > 0) {
+        // spreads are collapsed
+        $(".trMatch[data-matchid='{0}'] .quoteValueParent[data-oddtypeid='{1}']".format(matchId, currentOddTypeId)).removeClass("hidden");
+        $(".trMatch[data-matchid='{0}'] .quoteValue[data-oddtypeid='{1}']".format(matchId, currentOddTypeId)).removeClass("hidden");
+        $(".trMatch[data-matchid='{0}'] .special-bet-prematch[data-oddtypeid='{1}']".format(matchId, currentOddTypeId)).removeClass("hidden");
+    } else {
+        // spreads are expanded - all spreads displayed
+        $(".trMatch[data-matchid='{0}'] .spread-wrapper:not('.most_balanced') .quoteValueParent[data-oddtypeid='{1}']".format(matchId, currentOddTypeId)).addClass("hidden");
+        $(".trMatch[data-matchid='{0}'] .spread-wrapper:not('.most_balanced') .quoteValue[data-oddtypeid='{1}']".format(matchId, currentOddTypeId)).addClass("hidden");
+        $(".trMatch[data-matchid='{0}'] .spread-wrapper:not('.most_balanced') .special-bet-prematch[data-oddtypeid='{1}']".format(matchId, currentOddTypeId)).addClass("hidden");
+    }
+}
+
+function CloseAllSpreadsForMarketPreMatch(this_el) {
+
+    if (isEmpty(this_el))
+        return false;
+
+    var matchId = $(this_el).attr('data-matchid');
+    var currentOddTypeId = $(this_el).attr('data-oddtypeid');
+
+    $(".trMatch[data-matchid='{0}'] .spread-wrapper.most_balanced".format(matchId, currentOddTypeId)).removeClass("most_balanced");
+    $(this_el).closest('.spread-wrapper').addClass("most_balanced");
+
+    //console.log("closing all spreads ", currentOddTypeId, matchId);
+
+    $(".trMatch[data-matchid='{0}'] .spread-wrapper:not('.most_balanced') .quoteValueParent[data-oddtypeid='{1}']".format(matchId, currentOddTypeId)).addClass("hidden");
+    $(".trMatch[data-matchid='{0}'] .spread-wrapper:not('.most_balanced') .quoteValue[data-oddtypeid='{1}']".format(matchId, currentOddTypeId)).addClass("hidden");
+    $(".trMatch[data-matchid='{0}'] .spread-wrapper:not('.most_balanced') .special-bet-prematch[data-oddtypeid='{1}']".format(matchId, currentOddTypeId)).addClass("hidden");
+
+}
+
+function switchTicketMyBetsView(_type) {
+    if (isEmpty(_type))
+        _type = 0;
+
+    if (_type == 1) {
+        $(".ticket_holder_wrapper").removeClass('ticket-shown');
+        $(".ticket_holder_wrapper").addClass('mybets-shown');
+        loadMyBets();
+    } else {
+        $(".ticket_holder_wrapper").removeClass('mybets-shown');
+        $(".ticket_holder_wrapper").addClass('ticket-shown');
+        sendHeightToParent();
+    }
+}
+
+function showChosenLeugues() {
+
+    var selectedArray = [];
+    if (!clearChosenLeaguesClicked) {
+        selectedArray = getSelectedTournaments();
+    }
+    if (selectedArray.length > 0) {
+        $("#SelectedTournamentIds").val(selectedArray.join(','));
+    }
+    else {
+        $("#SelectedTournamentIds").val("");
+        $("#SelectedOnlyOneMarket").val("");
+        $("#SelectedCategoryId").val("");
+        $("#SelectedTournamentId").val("");
+    }
+    matchList();
+    
+    $(".mnu_sport").click();
+    $('.modal-backdrop').remove();
+}
+function clearChoosenLeagues() {
+    HasSelectedSportCategoryIdsArray = [];
+    CheckedTournamentIdsArray = [];
+
+    $("#SelectedTournamentIds").val("");
+    $("#SelectedOnlyOneMarket").val("");
+    $("#SelectedCategoryId").val("");
+    $("#SelectedTournamentId").val("");
+
+    clearChosenLeaguesClicked = true;
+
+    refreshSelectedTournaments_mob();
+}
+
+function toggleChoosenTournament(id) {
+    var alreadyselected = $("#SelectedTournamentIds").val();
+    if (!isEmpty(alreadyselected)) {
+        var selectedArray = alreadyselected.split(',');
+        var indexOfEl = selectedArray.indexOf(id.toString())
+
+        if (indexOfEl < 0)
+            selectedArray.push(id.toString());
+        else
+            selectedArray.splice(indexOfEl, 1);
+
+        if (selectedArray.length > 0)
+            $("#SelectedTournamentIds").val(selectedArray.join(','));
+        else
+            $("#SelectedTournamentIds").val("");
+    } else {
+        $("#SelectedTournamentIds").val(id.toString());
+    }
+    //console.log($("#SelectedTournamentIds").val());
+}
+
+function toggleParentCategory(categoryId, sportId, turnSelect) {
+    if (isEmpty(turnSelect))
+        turnSelect = false;
+
+    //console.log("--toggleParentCategory", categoryId, sportId);
+
+    if ($(".tournament_list .tournament_item.selected[data-sportcategoryid='{0}'][data-sportid='{1}']".format(categoryId, sportId)).length > 0) {
+        $(".sport_categories .category_list .sportcategory_item[data-sportcategoryid='{0}'][data-sportid='{1}']".format(categoryId, sportId)).addClass('hasSelection');
+    } else {
+        if (!turnSelect) {
+            $(".sport_categories .category_list .sportcategory_item[data-sportcategoryid='{0}'][data-sportid='{1}']".format(categoryId, sportId)).removeClass('hasSelection');
+        }
+    }
+}
+
+function LoadLiveHighlights() {      // F-ja za Live highlights
+    var url = ROOT + "Live/LiveHighlightsMainWidget";
+    var destinationEl = $('.live-highlights-wrapper');
+
+    if (destinationEl.length > 0) {
+        $.ajax({
+            cache: false,
+            type: "POST",
+            url: url,
+            error: function (request, status, error) {
+                console.error(status, error);
+            }
+        }).done(function (data) {
+            var received_matches_count = $(data).find('.live_match_data.live_for_update').length;
+            if (received_matches_count !== currentLiveWidget_count) {
+                currentLiveWidget_count = received_matches_count;
+                destinationEl.html(data);
+            }
+            setTimeout(LoadLiveHighlights, 50000);
+
+        }).fail(function (error) {
+            //
+        });
+    }
+}
+
+function GetMatchBetStatistics_process(matchId) {
+    if (isNothing(matchId))
+        return false;
+
+    var url = ROOT + 'Match/MatchBetStatistics';
+
+    $.ajax({
+        url: url,
+        type: "POST",
+        data: { matchId: matchId },
+        cache: false
+    }).done(function (data) {
+
+        $("#MatchBetStatisticsContent").html(data);
+    });
+}
+
+function RemoveTournamentFromCentralView(categoryId, tournamentId) {
+    if (isEmpty(categoryId) || isEmpty(tournamentId))
+        return;
+
+    $(".matchlist_for_tournament[data-sportcategoryid='{0}'][data-tournamentid='{1}']".format(categoryId, tournamentId)).remove();
+
+    refreshSelectedTournaments();
+
+    if ($(".matchlist_for_tournament").length == 0) {
+        displayNoSelectedTournamentInfo();
+    }
+}
+function displayNoSelectedTournamentInfo() {
+    if ($(".matchlist_for_tournament").length == 0) {
+        //console.log("displayNoSelectedTournamentInfo ----***");
+        //var url = ROOT + 'Home/NoSelectedTournamentInfo';
+        //loadBetData(url, $('#CentralDataHolder'), false);
+        //$('#CentralDataHolder').html("<div>No selected tournaments.</div>");
+        $("#SelectedOnlyOneMarket").val("");
+        $("#SelectedCategoryId").val("");
+        $("#SelectedTournamentId").val("");
+        $("#SelectedTournamentIds").val("");
+        matchList();
+    }
+}
+
+function refreshSelectedTournaments() {
+    $(".tournament_list .tournament_item").removeClass("selected");
+    $(".sport_categories .category_list .sportcategory_item.hasSelection[data-sportcategoryid][data-sportid]").removeClass('hasSelection');
+
+    HasSelectedSportCategoryIdsArray = [];
+    //$(".matchlist_for_tournament").each(function (index, element) {
+    //    $(".tournament_list .tournament_item[data-tournamentid='{0}']".format($(this).attr("data-tournamentid"))).addClass('selected');
+    //    toggleParentCategory($(this).attr("data-sportcategoryid"), $(this).attr("data-sportid"));
+    //});
+    if (CheckedTournamentIdsArray.length > 0) {
+        CheckedTournamentIdsArray.forEach(function (el, k) {
+            var tournamentsArrayForCategory = el;
+            if (tournamentsArrayForCategory.length > 0) {
+                for (var j = 0; j < tournamentsArrayForCategory.length; j++) {
+                    var tourEl = $(".tournament_list .tournament_item[data-tournamentid={0}]".format(tournamentsArrayForCategory[j]));
+                    if (tourEl.length > 0) {
+                        tourEl.addClass("selected");
+                        //toggleParentCategory(tourEl.attr('data-sportcategoryid'), tourEl.attr('data-sportid'), true);
+                    }
+                }
+                if (HasSelectedSportCategoryIdsArray.indexOf(k) < 0)
+                    HasSelectedSportCategoryIdsArray.push(k);
+            }
+        });
+    }
+
+    if (HasSelectedSportCategoryIdsArray.length > 0) {
+        HasSelectedSportCategoryIdsArray.forEach(function (el, k) {
+            $(".sport_categories .category_list .sportcategory_item[data-sportcategoryid='{0}'][data-sportid]".format(el)).addClass('hasSelection');
+        });
+    }
+
+    //console.log("refreshed tour selections");
+
+}
+
+function refreshSelectedTournaments_mob() {
+    refreshSelectedTournaments();
+    return false;
+
+    $(".tournament_list .tournament_item").removeClass("selected");
+    $(".sport_categories .category_list .sportcategory_item[data-sportcategoryid][data-sportid]").removeClass('hasSelection');
+
+    HasSelectedSportCategoryIdsArray = [];
+    //var alreadyselected = $("#SelectedTournamentIds").val();
+    //if (!isEmpty(alreadyselected)) {
+    //    var selectedArray = alreadyselected.split(',');
+    //    for (var i = 0; i < selectedArray.length; i++) {
+    //        var tourEl = $(".tournament_list .tournament_item[data-tournamentid={0}]".format(selectedArray[i]));
+    //        if (tourEl.length > 0) {
+    //            tourEl.addClass("selected");
+    //            toggleParentCategory(tourEl.attr('data-sportcategoryid'), tourEl.attr('data-sportid'), true);
+    //        }
+    //    }
+    //}
+    //console.log("refreshed tour selections mob");
+}
+
+
+function InitCashout(ticketId) {
+    $('#dataLoading').show();
+
+    $.ajax({
+        cache: false,
+        method: 'GET',
+        url: ROOT + "Ticket/InitCashout",
+        data: { ticketId: ticketId },
+        error: function (request, status, error) {
+            toastr['error'](error, CONST_LanguageResources_Error);
+            $('#dataLoading').hide();
+        }
+    }).done(function (data) {
+        $('#ModalCashoutLabel').html(CONST_LanguageResources_Cashout);
+        $('#ModalCashoutContent').html(data);
+        $('#ModalCashout').modal('show');
+
+        $('#dataLoading').hide();
+    });
+}
+
+function CreateCashout(ticketId, cashoutAmount, acceptAmountChanges) {
+    $('#dataLoading').show();
+    $.ajax({
+        cache: false,
+        method: 'POST',
+        url: ROOT + "Ticket/CreateCashout",
+        data: { ticketId: ticketId, cashoutAmount: cashoutAmount, acceptAmountChanges: acceptAmountChanges },
+        error: function (request, status, error) {
+            toastr['error'](error, CONST_LanguageResources_Error);
+            $('#dataLoading').hide();
+        }
+    }).done(function (data) {
+        if (data.OK) {
+            toastr['success'](CONST_LanguageResources_Cashout + ' ' + CONST_LanguageResources_ActionCompletedSuccessfully, CONST_LanguageResources_Success);
+            $("#search_parameters_ticket").submit();
+
+            //hide modal
+            $("#ModalTicketDetails").modal("hide");
+        } else {
+            toastr['error'](data.error, CONST_LanguageResources_Error);
+        }
+
+        $('#dataLoading').hide();
+    });
+}
+
+function GoLiveMatchDetails(livematchID) {
+    window.location.assign(ROOT + 'Live?LiveMatchId=' + livematchID);
+}
+
+function ToggelSportFiltersOnMobile() {
+    if (!$(".sport-filter-toggle-button").hasClass("Sport_filter_expanded")) {
+        $(".sport-filter-header").slideDown();
+        $(".sport-filter-toggle-button").addClass("Sport_filter_expanded");
+    } else {
+        $(".sport-filter-header").slideUp();
+        $(".sport-filter-toggle-button").removeClass("Sport_filter_expanded");
+    }
+}
+
+function getCheckedTournamentsFromArray() {
+    var ret = [];
+    if (CheckedTournamentIdsArray.length > 0) {
+        CheckedTournamentIdsArray.forEach(function (el, k) {
+            var tournamentsArrayForCategory = el;
+            if (tournamentsArrayForCategory.length > 0) {
+                for (var j = 0; j < tournamentsArrayForCategory.length; j++) {
+                    ret.push(tournamentsArrayForCategory[j]);
+                }
+            }
+        });
+    }
+    return ret;
+}
+
+function getSelectedTournaments() {
+    var selectedArray = [];
+    if (CheckedTournamentIdsArray.length == 0) {
+        if ($(".matchlist_for_tournament").first().attr('data-tournamentid') == "0") {
+            // svi mecevi iz razlicitih liga su ucitani (home)
+            $(".matchlist_for_tournament .header_tournament_row").each(function (el, k) {
+                selectedArray.push($(this).attr('data-tournamentid'));
+            });
+        } else {
+            // prikazani su mecevi po tournamentima (klik iz menija)
+            $(".matchlist_for_tournament").each(function (el, k) {
+                selectedArray.push($(this).attr('data-tournamentid'));
+            });
+        }
+    } else {
+        selectedArray = getCheckedTournamentsFromArray();
+    }
+    return selectedArray;
+}
+
+function FlashScoreStatistic(matchId, match_statistic_url) {
+    if (isEmpty(match_statistic_url))
+        match_statistic_url = "";
+
+    var url = location.protocol + '//' + location.host + '/Home/MatchStatistics?matchId=' + matchId;       // + '&iframeUrl=' + match_statistic_url;
+    window.open(url, "_blank", "toolbar=no,scrollbars=yes,menubar=no,location=no,resizable=yes,fullscreen=yes");
+}
+
+function hasScroll(el, direction) {
+    direction = (direction === 'vertical') ? 'scrollTop' : 'scrollLeft';
+    var result = !!el[direction];
+
+    if (!result) {
+        el[direction] = 1;
+        result = !!el[direction];
+        el[direction] = 0;
+    }
+    return result;
+};
+$(document).ready(function () {
+    documentaAjaxReady();
+});
+
+$(document).ajaxComplete(function () {
+    lazyloadInit();
+});
+
+function lazyloadInit() {
+    var lazyloadForm = $("form[data-ajax=true][data-ajax-lazyload=true]");
+    lazyloadForm.attr('data-ajax-lazyload', 'false');
+    lazyloadForm.trigger("submit");
+
+    var lazyloadLink = $("a[data-ajax=true][data-ajax-lazyload=true]");
+    lazyloadLink.attr('data-ajax-lazyload', 'false');
+    lazyloadLink.trigger("click");
+
+    $('select.PageSize').select2({ allowClear: false, multiple: false, width: 'style', minimumResultsForSearch: Infinity });
+
+}
+
+function documentaAjaxReady() {
+    lazyloadInit();
+
+    $(".user-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        SearchPatern: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.UserId;
+                            obj.text = obj.FullName + ' (' + obj.Username + ')';
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            templateSelection: function (repo) { return repo.FullName || repo.text; },
+        });
+    });
+
+    $(".countryregion-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        searchName: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.CountryRegionId;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+
+    $(".city-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                cache: false,
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        searchName: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        searchCountryRegionId: $this.attr('data-CountryRegionId')
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.CityId;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+
+            escapeMarkup: function (markup) { return markup; },
+            templateResult: formatCitiesRepo,
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+    function formatCitiesRepo(repo) {
+        if (repo.loading) return repo.text;
+
+        var markup = '<div class="clearfix">' +
+            '<div class="col-sm-12">' + repo.CountryRegionName + '</div>' +
+            '<div class="col-sm-12"><strong>' + repo.Name + '</strong></div>' +
+            '</div>';
+        return markup;
+    }
+
+    $(".parentuser-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        SearchPatern: params.term, // search term                        
+                        page: params.page,
+                        pageSize: params.pageSize
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.UserId;
+                            obj.text = obj.Username + ' (' + obj.RoleName + ')';
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            templateSelection: function (repo) { return repo.FullName || repo.text; },
+        });
+    });
+
+    $(".currency-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        CurrencyCode: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.CurrencyId;
+                            obj.text = obj.CurrencyCode;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            templateSelection: function (repo) { return repo.CurrencyCode || repo.text; },
+        });
+    });
+
+    $(".location-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Name: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.LocationId;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+    $(".sport-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Name: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.SportId;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+    $(".sportmulti-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: true,
+            tags: true,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Name: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.SportId;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+    $(".sportcategory-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                cache: false,
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Name: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        SportId: $this.attr('data-sportid')
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.SportCategoryId;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            escapeMarkup: function (markup) { return markup; },
+            templateResult: formatCategoriesRepo,
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+    function formatCategoriesRepo(repo) {
+        if (repo.loading) return repo.text;
+
+        var markup = '<div class="clearfix">' +
+            '<div class="col-sm-12">' + repo.SportName + '</div>' +
+            '<div class="col-sm-12"><strong>' + repo.Name + '</strong></div>' +
+            '</div>';
+        return markup;
+    }
+
+    $(".sportcategoryWithBetItemsCount-select2").attr("style", "width:100%");
+    $(".sportcategoryWithBetItemsCount-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                cache: false,
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        SearchTerm: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        SportId: $this.attr('data-sportid'),
+                        FromDate: $this.attr('data-datefrom'),
+                        ToDate: $this.attr('data-dateto'),
+                        BetRangeFilter: $this.attr('data-betrangefilter')
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.SportCategoryId;
+                            obj.text = obj.Name + " (" + obj.BetItemsNo + ")";
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            escapeMarkup: function (markup) { return markup; },
+            templateResult: formatCategoriesRepo1,
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+    function formatCategoriesRepo1(repo) {
+        if (repo.loading) return repo.text;
+
+        var markup = '<div class="clearfix">' +
+            '<div class="col-sm-12">' + repo.SportName + '</div>' +
+            '<div class="col-sm-12"><strong>' + repo.Name + ' (' + repo.BetItemsNo + ')' + '</strong></div>' +
+            '</div>';
+        return markup;
+    }
+
+
+    $(".tournament-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                cache: false,
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Name: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        SportId: $this.attr('data-sportid'),
+                        SportCategoryId: $this.attr('data-sportcategoryid')
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.TournamentId;
+                            obj.text = obj.Name;
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            escapeMarkup: function (markup) { return markup; },
+            templateResult: formatTournamentsRepo,
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+    function formatTournamentsRepo(repo) {
+        if (repo.loading) return repo.text;
+
+        var markup = '<div class="clearfix">' +
+            '<div class="col-sm-12">' + repo.SportName + ' -> ' + repo.SportCategoryName + '</div>' +
+            '<div class="col-sm-12"><strong>' + repo.Name + '</strong></div>' +
+            '</div>';
+        return markup;
+    }
+
+    $(".tournamentWithBetItemsCount-select2").attr("style", "width:100%");
+    $(".tournamentWithBetItemsCount-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                cache: false,
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        SearchTerm: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        SportId: $this.attr('data-sportid'),
+                        SportCategoryId: $this.attr('data-sportcategoryid'),
+                        FromDate: $this.attr('data-datefrom'),
+                        ToDate: $this.attr('data-dateto'),
+                        BetRangeFilter: $this.attr('data-betrangefilter')
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.TournamentId;
+                            obj.text = obj.Name + ' (' + obj.BetItemsNo + ')';
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            escapeMarkup: function (markup) { return markup; },
+            templateResult: formatTournamentsRepo1,
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+    function formatTournamentsRepo1(repo) {
+        if (repo.loading) return repo.text;
+
+        var markup = '<div class="clearfix">' +
+            '<div class="col-sm-12">' + (isEmpty(repo.SportName) ? '' : repo.SportName) + (isEmpty(repo.SportName) || isEmpty(repo.SportCategoryName) ? '' : ' -> ') + (isEmpty(repo.SportCategoryName) ? '' : repo.SportCategoryName) + '</div>' +
+            '<div class="col-sm-12"><strong>' + repo.Name + '(' + repo.BetItemsNo + ')' + '</strong></div>' +
+            '</div>';
+        return markup;
+    }
+
+
+    $(".livematch-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                cache: false,
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Patern: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        SportId: $this.attr('data-sportid'),
+                        SportCategoryId: $this.attr('data-sportcategoryid'),
+                        TournamentId: $this.attr('data-tournamentid'),
+                        LiveOddTypeId: $this.attr('data-liveoddtypeid'),
+                        EventDate: $this.attr('data-eventdate')
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.BetRadarMatchId;
+                            obj.text = obj.HomeTeamName + ' - ' + obj.AwayTeamName;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            escapeMarkup: function (markup) { return markup; },
+            templateResult: formatLiveMatchesRepo,
+            templateSelection: function (repo) { return repo.text; },
+        });
+    });
+
+    function formatLiveMatchesRepo(repo) {
+        if (repo.loading) return repo.text;
+
+        var macthDate = moment(repo.DateOfMatch).format(DATETIME_FORMAT);
+
+        var markup = '<div class="clearfix">' +
+            '<div class="col-sm-12">' + repo.TournamentName + '</div>' +
+            '<div class="col-sm-12"><strong>' + macthDate + ': ' + repo.HomeTeamName + ' - ' + repo.AwayTeamName + '</strong></div>' +
+            '</div>';
+        return markup;
+    }
+
+    $(".match-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                cache: false,
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Patern: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        SportId: $this.attr('data-sportid'),
+                        SportCategoryId: $this.attr('data-sportcategoryid'),
+                        TournamentId: $this.attr('data-tournamentid'),
+                        FromDate: $this.attr('data-fromdate'),
+                        ToDate: $this.attr('data-todate'),
+                        EventDate: $this.attr('data-eventdate')
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.MatchId;
+                            obj.text = obj.Competitor1 + ' - ' + obj.Competitor2;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            escapeMarkup: function (markup) { return markup; },
+            templateResult: formatMatchesRepo,
+            templateSelection: function (repo) { return repo.text; },
+        });
+    });
+
+    function formatMatchesRepo(repo) {
+        if (repo.loading) return repo.text;
+
+        var macthDate = moment(repo.MatchDate).format(DATETIME_FORMAT);
+
+        var markup = '<div class="clearfix">' +
+            '<div class="col-sm-12">' + repo.TournamentName + '</div>' +
+            '<div class="col-sm-12"><strong>' + macthDate + ': ' + repo.Competitor1 + ' - ' + repo.Competitor2 + '</strong></div>' +
+            '</div>';
+        return markup;
+    }
+
+    $(".outright-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                cache: false,
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Name: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        SportId: $this.attr('data-sportid'),
+                        SportCategoryId: $this.attr('data-sportcategoryid'),
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.OutrightId;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            escapeMarkup: function (markup) { return markup; },
+            templateResult: formatOutrightsRepo,
+            templateSelection: function (repo) { return repo.text; },
+        });
+    });
+
+    function formatOutrightsRepo(repo) {
+        if (repo.loading) return repo.text;
+
+        var eventDate = moment(repo.EventDate).format(DATETIME_FORMAT);
+
+        var markup = '<div class="clearfix">' +
+            '<div class="col-sm-12">' + repo.SportCategoryName + '</div>' +
+            '<div class="col-sm-12"><strong>' + eventDate + ': ' + repo.Name + '</strong></div>' +
+            '</div>';
+        return markup;
+    }
+
+
+    $(".oddtype-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                cache: false,
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Name: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        SportId: $this.attr('data-sportid'),
+                        SportCategoryId: $this.attr('data-sportcategoryid'),
+                        TournamentId: $this.attr('data-tournamentid'),
+                        MatchId: $this.attr('data-matchid')
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.OddTypeId;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            escapeMarkup: function (markup) { return markup; },
+            templateResult: formatOddTypesRepo,
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+    $(".liveoddtype-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                cache: false,
+                data: function (params) {
+                    params.page = params.page || 1;
+                    params.pageSize = params.pageSize || 20;
+                    return {
+                        Name: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        SportId: $this.attr('data-sportid'),
+                        SportCategoryId: $this.attr('data-sportcategoryid'),
+                        TournamentId: $this.attr('data-tournamentid'),
+                        LiveMatchId: $this.attr('data-livematchid')
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.LiveOddTypeId;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            escapeMarkup: function (markup) { return markup; },
+            templateResult: formatOddTypesRepo,
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+    $(".country-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Name: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                        AllowedCountries: $this.attr('data-allowed-countries')
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.Id;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            templateSelection: function (repo) { return repo.Name || repo.text; },
+        });
+    });
+
+
+    function formatOddTypesRepo(repo) {
+        if (repo.loading) return repo.text;
+
+        var markup = '<div class="clearfix">' +
+            '<div class="col-sm-12">' + repo.SportName + '</div>' +
+            '<div class="col-sm-12"><strong>' + repo.Name + '</strong></div>' +
+            '</div>';
+        return markup;
+    }
+
+
+    $(".casinogames-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        Name: params.term, // search term
+                        Active: true,
+                        page: params.page,
+                        pageSize: params.pageSize,
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.CasinoGameId;
+                            obj.text = obj.Name;
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            templateSelection: function (repo) { return repo.FullName || repo.text; },
+        });
+    });
+
+    $(".casino-select2").each(function () {
+        var $this = $(this);
+        $(this).select2({
+            allowClear: true,
+            multiple: false,
+            placeholder: {
+                text: $(this).attr("placeholder")
+            },
+            ajax: {
+                dataType: "json",
+                data: function (params) {
+                    params.page = params.page || 1
+                    params.pageSize = params.pageSize || 20
+                    return {
+                        SearchPatern: params.term, // search term
+                        page: params.page,
+                        pageSize: params.pageSize,
+                    };
+                },
+                processResults: function (data, params) {
+                    if (data.OK) {
+                        params.page = params.page || 1;
+                        var select2Data = $.map(data.items, function (obj) {
+                            //data from controller
+                            obj.id = obj.CasinoId;
+                            obj.text = obj.Name;
+
+                            return obj;
+                        });
+                        return {
+                            results: select2Data,
+                            pagination: {
+                                more: data.LoadMore || false
+                            }
+                        };
+                    };
+                },
+            },
+            //template
+            templateSelection: function (repo) { return repo.FullName || repo.text; },
+        });
+    });
+};
+var LOCAL_TIMEZONE = "";
+var SERVER_TIMEZONE = "";
+
+function InitTimezone() {
+    var timeZone = getCookie("TimeZone");
+    var d = new Date();
+
+    //TODO: Skloniti console.log
+    //console.log(timeZone);
+
+    if (timeZone == null || timeZone == undefined) {
+
+        document.cookie = `TimeZone=${d.getTimezoneOffset()};max-age=${60 * 60 * 24 * 365}`;
+        LOCAL_TIMEZONE = d.getTimezoneOffset();
+        //location.reload();
+    }
+    else {
+        if (timeZone != d.getTimezoneOffset()) {
+            document.cookie = `TimeZone=${d.getTimezoneOffset()};max-age=${60 * 60 * 24 * 365}`;
+            LOCAL_TIMEZONE = d.getTimezoneOffset();
+            //location.reload();
+        }
+        else {
+            LOCAL_TIMEZONE = timeZone;
+        }
+    }
+
+}
+
+function getCookie(name) {
+    var dc = document.cookie;
+    var prefix = name + "=";
+    var begin = dc.indexOf("; " + prefix);
+    if (begin == -1) {
+        begin = dc.indexOf(prefix);
+        if (begin != 0) return null;
+    }
+    else {
+        begin += 2;
+        var end = document.cookie.indexOf(";", begin);
+        if (end == -1) {
+            end = dc.length;
+        }
+    }
+    // because unescape has been deprecated, replaced with decodeURI
+    //return unescape(dc.substring(begin + prefix.length, end));
+    return decodeURI(dc.substring(begin + prefix.length, end));
+}
+
+function formatDate(date) {
+    return formatDateTimeWithFormat(date, DATE_FORMAT);
+}
+
+function formatTime(time) {
+    return formatDateTimeWithFormat(time, TIME_FORMAT);
+}
+
+function formatDateTime(dateTime) {
+    return formatDateTimeWithFormat(dateTime, DATE_FORMAT + ' ' + TIME_FORMAT);
+}
+
+function formatDateTimeWithFormat(datetime, format) {
+    var dt = moment(datetime).toDate();
+    var dtWithOffset = new Date();
+
+    dtWithOffset.setTime(dt.getTime() + SERVER_TIMEZONE * 60 * 1000);
+
+    //dtWithOffset.setTime(dt.getTime() + SERVER_TIMEZONE * 60 * 1000 - LOCAL_TIMEZONE * 60 * 1000);
+    return moment(dtWithOffset).format(format);
+};
+var CONST_LanguageResources_PaymentInstructions = "";
+var CONST_LanguageResources_Error = "";
+var CONST_LanguageResources_Success = "";
+var CONST_LanguageResources_DepositMoney = "";
+var CONST_LanguageResources_Withdrawal = "";
+var CONST_LanguageResources_DirectBankTransfer = "";
+var CONST_LanguageResources_CEPBankTransfer = "";
+var CONST_LanguageResources_Paymee = "";
+var CONST_LanguageResources_RunPay = "";
+var CONST_LanguageResources_Sobflous = "";
+var CONST_LanguageResources_Voucher = "";
+var CONST_LanguageResources_DepositSubtitle = "";
+var CONST_LanguageResources_RentPay = "";
+var CONST_LanguageResources_BonusOffers = "";
+var CONST_LanguageResources_UserBonusBalanceDetail = "";
+var CONST_LanguageResources_AmericanQuote = "";
+var CONST_LanguageResources_DecimalQuote = "";
+var CONST_LanguageResources_TicketSuccessfullyLoaded = "";
+var CONST_LanguageResources_VoucherPayout = "";
+var CONST_LanguageResources_Papara = "";
+var CONST_LanguageResources_QRCode = "";
+var CONST_LanguageResources_CreditCardPayDept = "";
+var CONST_LanguageResources_Cryptocurrency = "";
+var CONST_LanguageResources_Ticket = "";
+var CONST_LanguageResources_Cashout = "";
+var CONST_LanguageResources_ActionCompletedSuccessfully = "";
+var CONST_LanguageResources_UserFreeBetsDetail = "";
+var CONST_LanguageResources_Announcement = "";
+var CONST_LanguageResources_PayMaster = "";
+var CONST_LanguageResources_Flouci = "";
+var CONST_LanguageResources_DirectPaymentTransfer = "";
+;
+var CONST_Transaction_Type_Deposit = 1;
+var CONST_Transaction_Type_Withdrawal = 2;
+
+var CONST_PaymentMethods_DirectBankTransfer = "1";
+var CONST_PaymentMethods_CEPBankTransfer = "2";
+var CONST_PaymentMethods_Paymee = "4";
+var CONST_PaymentMethods_RunPay = "5";
+var CONST_PaymentMethods_Sobflous = "6";
+var CONST_PaymentMethods_Papara = "7";
+var CONST_PaymentMethods_QRCode = "8";
+var CONST_PaymentMethods_CreditCardPayDept = "9";
+var CONST_PaymentMethods_Cryptocurrency = "10";
+var CONST_PaymentMethods_PayMaster = "11";
+var CONST_PaymentMethods_Flouci = "12";
+var CONST_PaymentMethods_PaymeeV2 = "13";
+var CONST_PaymentMethods_PaymeeV1 = "14";
+var CONST_PaymentMethods_Voucher = "101";
+var CONST_PaymentMethods_DirectPayment = "110";
+
+var CONST_AlwaysCheckBonusWhenDeposit = false;
+
+function PaymentInstructions() {
+    PaymentMethod(CONST_Transaction_Type_Deposit, true, CONST_LanguageResources_PaymentInstructions, 0, function (paymentMethodType) {
+        ShowPaymentInstructions(paymentMethodType);
+    });
+}
+
+function ShowPaymentInstructions(paymentMethodType) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/PaymentInstructions";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: {
+            paymentMethod: paymentMethodType
+        },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalInfoBoxLabel").html(CONST_LanguageResources_PaymentInstructions);
+        $("#ModalInfoBoxContent").html(data);
+        $("#ModalInfoBox").modal("show");
+        $("#dataLoading").hide();
+    });
+}
+
+function DepositMoney() {
+    if (CONST_AlwaysCheckBonusWhenDeposit) {
+        DepositBonusOffer();
+    } else {
+        DepositMoney_process();
+    }
+}
+
+function DepositMoney_process(bonusId) {
+    $("#ModalPaymentBoxContent").html("");
+    PaymentMethod(CONST_Transaction_Type_Deposit, false, CONST_LanguageResources_DepositMoney, bonusId, function (paymentMethodType, subMethod) {
+        switch (paymentMethodType) {
+            case CONST_PaymentMethods_DirectBankTransfer:
+                DirectBankTransfer(bonusId);
+                break;
+            case CONST_PaymentMethods_CEPBankTransfer:
+                CEPBankTransfer(bonusId);
+                break;
+            case CONST_PaymentMethods_Paymee:
+                Paymee(subMethod, bonusId);
+                break;
+            case CONST_PaymentMethods_RunPay:
+                RunPay(bonusId);
+                break;
+            case CONST_PaymentMethods_Sobflous:
+                Sobflous(bonusId);
+                break;
+            case CONST_PaymentMethods_Papara:
+                Papara(bonusId);
+                break;
+            case CONST_PaymentMethods_QRCode:
+                QRCode(bonusId);
+                break;
+            case CONST_PaymentMethods_CreditCardPayDept:
+                CreditCardPayDept(bonusId);
+                break;
+            case CONST_PaymentMethods_Cryptocurrency:
+                Cryptocurrency(bonusId);
+                break;
+            case CONST_PaymentMethods_PayMaster:
+                PayMaster(bonusId);
+                break;
+            case CONST_PaymentMethods_Voucher:
+                DepositVoucher(bonusId, subMethod);
+                break;
+            case CONST_PaymentMethods_Flouci:
+                Flouci(bonusId);
+                break;
+            case CONST_PaymentMethods_PaymeeV2:
+                PaymeeV2(bonusId);
+                break;
+            case CONST_PaymentMethods_DirectPayment:
+                DirectPayment(bonusId, subMethod);
+                break;
+        }
+    });
+}
+
+function WithdrawalMoney() {
+    PaymentMethod(CONST_Transaction_Type_Withdrawal, false, CONST_LanguageResources_Withdrawal, 0, function (paymentMethodType, subMethod) {
+        switch (paymentMethodType) {
+            case CONST_PaymentMethods_DirectBankTransfer:
+                WithdrawalDirectBankTransfer();
+                break;
+            case CONST_PaymentMethods_Paymee:
+                WithdrawalPaymee(subMethod);
+                break;
+            case CONST_PaymentMethods_RunPay:
+                WithdrawalRunPay();
+                break;
+            case CONST_PaymentMethods_Sobflous:
+                WithdrawalSobflous();
+                break;
+            case CONST_PaymentMethods_Papara:
+                WithdrawalPapara();
+                break;
+            case CONST_PaymentMethods_Cryptocurrency:
+                WithdrawalCryptocurrency();
+                break;
+            case CONST_PaymentMethods_Voucher:
+                WithdrawalVoucher();
+                break;
+            case CONST_PaymentMethods_PaymeeV1:
+                WithdrawalPaymeeV1();
+                break;
+        }
+    });
+}
+
+function DirectBankTransfer(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/DirectBankTransfer";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_DirectBankTransfer);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function WithdrawalDirectBankTransfer() {
+    $("#dataLoading").show();
+    var url = ROOT + "Withdrawal/DirectBankWithdrawal";
+    $.ajax({
+        cache: false,
+        url: url,
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_Withdrawal + " - " + CONST_LanguageResources_DirectBankTransfer);
+        $("#ModalPaymentBoxContent").html(data);
+
+        setTimeout(function () {
+            $("#dataLoading").hide();
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function CEPBankTransfer(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/CEPBankTransfer";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_CEPBankTransfer);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function Paymee(subMethod, bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/Paymee";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { subMethod: subMethod, bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_Paymee);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function WithdrawalPaymee(subMethod) {
+    $("#dataLoading").show();
+    var url = ROOT + "Withdrawal/PaymeeWithdrawal";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { subMethod: subMethod },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_Withdrawal + " - " + CONST_LanguageResources_Paymee);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+
+function PaymeeV2(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/PaymeeV2";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_Paymee);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function WithdrawalPaymeeV1() {
+    $("#dataLoading").show();
+    var url = ROOT + "Withdrawal/PaymeeV1Withdrawal";
+    $.ajax({
+        cache: false,
+        url: url,
+        
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_Withdrawal + " - " + CONST_LanguageResources_Paymee);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function RunPay(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/RunPay";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_RunPay);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function WithdrawalRunPay() {
+    $("#dataLoading").show();
+    var url = ROOT + "Withdrawal/RunPayWithdrawal";
+    $.ajax({
+        cache: false,
+        url: url,
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_Withdrawal + " - " + CONST_LanguageResources_RunPay);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function Sobflous(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/Sobflous";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_Sobflous);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function WithdrawalSobflous() {
+    $("#dataLoading").show();
+    var url = ROOT + "Withdrawal/SobflousWithdrawal";
+    $.ajax({
+        cache: false,
+        url: url,
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_Withdrawal + " - " + CONST_LanguageResources_Sobflous);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function PaymentMethod(actionType, isPaymentInstructions, title, bonusId, callback) {
+    if (isNothing(actionType))
+        actionType = "";
+    if (isNothing(isPaymentInstructions))
+        isPaymentInstructions = false;
+
+    var url = ROOT + "PaymentMethod";
+    $.ajax({
+        url: url,
+        type: "get",
+        data: { actionType: actionType, isPaymentInstructions: isPaymentInstructions, bonusId: bonusId },
+        cache: false
+    }).done(function (data) {
+        
+        if ($(data).find('#TransferStatus').length > 0) {
+            $("#ModalDirectPaymentBoxLabel").html(title);
+            $("#ModalDirectPaymentBoxSubheader").html(CONST_LanguageResources_DepositSubtitle);
+            $("#ModalDirectPaymentBoxContent").html(data);
+            $("#ModalDirectPaymentBox").modal("show");
+        } else {
+            $("#PaymentMethodBoxLabel").html(title);
+            $("#PaymentMethodBoxSubheader").html(CONST_LanguageResources_DepositSubtitle);
+            $("#PaymentMethodBoxContent").html(data);
+            $("#PaymentMethodBox").modal("show");
+        }
+        $(".payment_method").off("click").on("click", function () {
+            var paymentMethodType = $(this).attr("data-paymentmethod");
+            var subType = $(this).attr("data-submethod");
+          
+            // this is IntantExchange withdrawal
+            if (actionType == CONST_Transaction_Type_Withdrawal && paymentMethodType == CONST_PaymentMethods_DirectPayment) {
+                $("#dataLoading").show();
+
+                let url = ROOT + "DirectPaymentWithdrawal/Step1?subType=" + subType;
+                $.ajax({
+                    cache: false,
+                    url: url,
+                    data: { },
+                    error: function (request, status, error) {
+                        toastr["error"](error, CONST_LanguageResources_Error);
+                        $("#errormessage").html(error);
+                        $("#dataLoading").hide();
+                    }
+                }).done(function (data) {
+                    $('#PaymentMethodBox').modal('hide');
+                    $("#ModalPaymentBoxContent").html(data);
+                    $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_Withdrawal + " - " + CONST_LanguageResources_DirectPaymentTransfer);
+                  
+                    $("#dataLoading").hide();
+                    setTimeout(function () {
+                        $("#ModalPaymentBox").modal("show");
+                    }, 220);
+                });
+                return;
+            }
+
+            $("#PaymentMethodBox").modal("toggle");
+
+            if (paymentMethodType == -1 && subType == -1) {     // user need fill necessary fields 
+                if ($('body').hasClass('mobile-body'))
+                    window.location.replace(ROOT + 'User/UserProfile');
+                else
+                    window.location.replace(ROOT + 'User/PersonalInformations');
+            } else {
+                if (!isNothing(callback)) {
+                    callback(paymentMethodType, subType);
+                }
+            }
+        });
+    });
+}
+
+function DepositVoucher(bonusId, subMethod) {
+    $("#dataLoading").show();
+    var url = ROOT + "Voucher/Deposit";
+
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId, depositType: subMethod },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_Voucher);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function WithdrawalVoucher() {
+    $("#dataLoading").show();
+    var url = ROOT + "Voucher/Withdrawal";
+
+    $.ajax({
+        cache: false,
+        url: url,
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_Withdrawal + " - " + CONST_LanguageResources_Voucher);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+
+            $("#ModalVoucherInfoBox").modal("show");
+        }, 220);
+    });
+}
+
+function DepositBonusOffer() {
+
+    var url = ROOT + 'Bonus/DepositBonusOffers';
+    $.ajax({
+        url: url,
+        type: "get",
+        cache: false,
+    }).done(function (data) {
+
+        //$('#PaymentMethod1Box').html(title);
+        $('#PaymentMethod1BoxLabel').html(CONST_LanguageResources_BonusOffers);
+        $('#PaymentMethod1BoxContent').html(data);
+        $('#PaymentMethod1Box').modal('show');
+
+        $(".bonus_type").off("click").on("click", function () {
+            var bonusId = $(this).attr("data-bonusid");
+            $('#PaymentMethod1Box').modal('toggle');
+            DepositMoney_process(bonusId);
+        });
+    });
+};
+
+function Papara(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/Papara";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_Papara);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function WithdrawalPapara() {
+    $("#dataLoading").show();
+    var url = ROOT + "Withdrawal/PaparaWithdrawal";
+    $.ajax({
+        cache: false,
+        url: url,
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_Withdrawal + " - " + CONST_LanguageResources_Papara);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function QRCode(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/QRCode";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_QRCode);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function CreditCardPayDept(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/CreditCardPayDept";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_CreditCardPayDept);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function Cryptocurrency(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/Cryptocurrency";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_Cryptocurrency);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function WithdrawalCryptocurrency() {
+    $("#dataLoading").show();
+    var url = ROOT + "Withdrawal/CryptocurrencyWithdrawal";
+    $.ajax({
+        cache: false,
+        url: url,
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_Withdrawal + " - " + CONST_LanguageResources_Cryptocurrency);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function PayMaster(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/PayMaster";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_PayMaster);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+function Flouci(bonusId) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/Flouci";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_Flouci);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+}
+
+
+function DirectPayment(bonusId, subMethod) {
+    $("#dataLoading").show();
+    var url = ROOT + "Payment/DirectPayment";
+    $.ajax({
+        cache: false,
+        url: url,
+        data: { bonusId: bonusId, subType: subMethod },
+        error: function (request, status, error) {
+            toastr["error"](error, CONST_LanguageResources_Error);
+            $("#errormessage").html(error);
+            $("#dataLoading").hide();
+        }
+    }).done(function (data) {
+        $("#ModalPaymentBoxLabel").html(CONST_LanguageResources_DepositMoney + " - " + CONST_LanguageResources_DirectPaymentTransfer);
+        $("#ModalPaymentBoxContent").html(data);
+
+        $("#dataLoading").hide();
+        setTimeout(function () {
+            $("#ModalPaymentBox").modal("show");
+        }, 220);
+    });
+};

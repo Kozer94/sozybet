@@ -1,0 +1,394 @@
+﻿// Packet
+function Packet() {
+    this.__type = "Packet:#FlashBet.WebSocket.Protocol";    
+    this.ErrorCode = 0;
+    this.m_LoggingLevel = 0;
+}
+
+function replacer(key, value) {
+    if (key == "m_LoggingLevel")
+        return undefined;
+    else
+        return value;
+}
+
+Packet.prototype = {
+    constructor: Packet,
+    AsString: function () {
+        var dto = { Packet: this };
+        return JSON.stringify(dto, replacer);
+    },
+    GetLoggingLevel: function () {
+        return this.m_LoggingLevel;
+    },
+    GetErrorCode: function () {
+        return this.ErrorCode;
+    },
+    GetType: function () {        
+        return getClassName(this);
+    }
+}
+
+function getClassName(obj) {
+
+    if (obj == null || obj.__type == null && obj.__type == "")
+        return null;
+
+    var className = obj.__type.substring(0, obj.__type.indexOf(":"));
+    
+    return className;
+}
+
+function inheritPrototype(childObject, parentObject) {
+    var copyOfParent = Object.create(parentObject.prototype);
+
+    copyOfParent.constructor = childObject;
+
+    childObject.prototype = copyOfParent;
+}
+
+function GetPacketFromJSON(data) {
+    if (data == null || data.__type == null && data.__type == "")
+        return null;
+
+    var type = data.Packet.__type.substring(0, data.Packet.__type.indexOf(":"));
+
+    if (type == null || type == "")
+        return null;
+
+    var packet = $.extend(eval("new " + type + "()"), data);
+
+    return packet;
+}
+
+//***************protocol packets *******************************
+
+//----------Inbounds-------------------
+// ServerGreetingPacket
+function ServerGreetingPacket() {
+    this.Message = "";
+    this.ServerTime = null;
+    this.Version = "";
+
+    Packet.call(this);
+    this.__type = "ServerGreetingPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(ServerGreetingPacket, Packet);
+
+// PongPacket
+function PongPacket() {
+    Packet.call(this);
+    this.__type = "PongPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(PongPacket, Packet);
+
+// MatchHeaderUpdatePacket
+function MatchHeaderUpdatePacket() {
+    this.MatchId = 0;
+    this.Active = false;
+    this.BetStatus = 0;
+    this.MatchStatus = 0;
+    this.MatchStatusStr = "";
+    this.MatchTime = 0;
+    this.MatchTimeStr = "";
+    this.Score = "";
+    this.ScoreAway = "";
+    this.ScoreHome = "";
+    this.DateOfMatchStr = "";
+    this.DateOfMatch = "";
+    this.CornersAway = null;
+    this.CornersHome = null;
+    this.YellowCardsAway = null;
+    this.RedCardsAway = null;
+    this.YellowRedCardsAway = null;
+    this.YellowCardsHome = null;
+    this.RedCardsHome = null;
+    this.YellowRedCardsHome = null;
+
+    Packet.call(this);
+    this.__type = "MatchHeaderUpdatePacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(MatchHeaderUpdatePacket, Packet);
+
+// MatchOddsUpdatePacket
+function MatchOddsUpdatePacket() {
+    this.MatchId = 0;
+    this.LiveMatchOdds = null;
+
+    Packet.call(this);
+    this.__type = "MatchOddsUpdatePacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(MatchOddsUpdatePacket, Packet);
+
+// MatchCardsChangedPacket
+function MatchCardsChangedPacket() {
+    this.MatchId = 0;
+
+    Packet.call(this);
+    this.__type = "MatchCardsChangedPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(MatchCardsChangedPacket, Packet);
+
+// MatchScoresChangedPacket
+function MatchScoresChangedPacket() {
+    this.MatchId = 0;
+
+    Packet.call(this);
+    this.__type = "MatchScoresChangedPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(MatchScoresChangedPacket, Packet);
+
+// MatchOddsCountChangedPacket
+function MatchOddsCountChangedPacket() {
+    this.MatchId = 0;
+    this.OddsCount = 0;
+
+    Packet.call(this);
+    this.__type = "MatchOddsCountChangedPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(MatchOddsCountChangedPacket, Packet);
+
+// TicketLiveBetChangedPacket
+function TicketLiveBetChangedPacket() {
+    this.SessionId = "";
+    this.LiveMatchOddValues = null;
+    this.TotalTips = 0;
+    this.TotalBets = 0;
+    this.WagerPerGroup = 0;
+    this.TotalQuota = 0;
+    this.TotalBonus = 0;
+    this.PossibleWinnings = 0;
+
+    Packet.call(this);
+    this.__type = "TicketLiveBetChangedPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(TicketLiveBetChangedPacket, Packet);
+
+// LiveMatchStatusResponsePacket
+function LiveMatchStatusResponsePacket() {
+    this.LiveMatchId = 0;
+    this.MatchStatus = 0;
+    this.DisplayMatchStatus = 0;
+
+    Packet.call(this);
+    this.__type = "LiveMatchStatusResponsePacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(LiveMatchStatusResponsePacket, Packet);
+
+// RedirectClientToMaintenancePagePacket
+function RedirectClientToMaintenancePagePacket() {
+    Packet.call(this);
+    this.__type = "RedirectClientToMaintenancePagePacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(RedirectClientToMaintenancePagePacket, Packet);
+
+//----------------------------------------
+//ChatUsersListResponsePacket 
+
+function ChatUsersListResponsePacket() {
+    this.List = new Array();
+    Packet.call(this);
+    this.__type = "ChatUsersListResponsePacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(ChatUsersListResponsePacket, Packet);
+//
+
+//ChatMessagePacket
+function ChatMessagePacket() {
+    this.UserChatId = null;
+    this.Date = null;
+    this.From = null;
+    this.To = null;
+    this.Message = null;
+    this.IsRead = null;
+
+    Packet.call(this);
+    this.__type = "ChatMessagePacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(ChatMessagePacket, Packet);
+//
+
+//MarkChatMessagesAsReadedResponsePacket
+function MarkChatMessagesAsReadedResponsePacket() {
+    this.From = null;
+    this.MessageIds = null;
+    Packet.call(this);
+    this.__type = "MarkChatMessagesAsReadedResponsePacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(MarkChatMessagesAsReadedResponsePacket, Packet);
+
+//ChatInfoPacket
+function ChatInfoPacket() {
+    this.UnreadMessagesCount = null;
+    Packet.call(this);
+    this.__type = "ChatInfoPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(ChatInfoPacket, Packet);
+
+// LogOutRequestPacket
+function LogOutRequestPacket() {
+    this.UserId = 0;
+    this.Username = "";
+    Packet.call(this);
+    this.__type = "LogOutRequestPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(LogOutRequestPacket, Packet);
+
+//----------------------------------------
+
+//----------Outbounds-------------------
+
+//PingPacket
+function PingPacket() {
+    Packet.call(this);
+    this.__type = "PingPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(PingPacket, Packet);
+
+//SubscribeClientPacket
+function SubscribeClientPacket(webServerName, sessionId, userId, username, clientType) {
+    if (isEmpty(userId))
+        userId = 0;
+
+    Packet.call(this);
+
+    this.__type = "SubscribeClientPacket:#FlashBet.WebSocket.Protocol";
+
+    this.SessionId = sessionId;
+    this.WebServerName = webServerName;
+    this.UserId = userId;
+    this.Username = username;
+    this.ClientType = clientType; //0 - Betting Client 1 - Admin Client
+}
+inheritPrototype(SubscribeClientPacket, Packet);
+
+//SubscribeToSportRequestPacket
+function SubscribeToSportRequestPacket(sportId) {
+
+    Packet.call(this);
+
+    this.__type = "SubscribeToSportRequestPacket:#FlashBet.WebSocket.Protocol";
+
+    this.SportId = sportId;
+}
+inheritPrototype(SubscribeToSportRequestPacket, Packet);
+
+//SubscribeToMatchRequestPacket
+function SubscribeToMatchRequestPacket(liveMatchId) {
+
+    Packet.call(this);
+
+    this.__type = "SubscribeToMatchRequestPacket:#FlashBet.WebSocket.Protocol";
+
+    this.LiveMatchId = liveMatchId;
+}
+inheritPrototype(SubscribeToMatchRequestPacket, Packet);
+
+//LiveMatchStatusRequestPacket
+function LiveMatchStatusRequestPacket(liveMatchId, cultureName) {
+
+    Packet.call(this);
+
+    this.__type = "LiveMatchStatusRequestPacket:#FlashBet.WebSocket.Protocol";
+
+    this.LiveMatchId = liveMatchId;
+    this.CultureName = cultureName;
+}
+inheritPrototype(LiveMatchStatusRequestPacket, Packet);
+
+//SubscribeToFavoriteMatchesPacket
+function SubscribeToFavoriteMatchesPacket(favorites) {
+
+    Packet.call(this);
+
+    this.__type = "SubscribeToFavoriteMatchesPacket:#FlashBet.WebSocket.Protocol";
+
+    this.Favorites = favorites;
+}
+inheritPrototype(SubscribeToFavoriteMatchesPacket, Packet);
+
+//ClientInfoPacket
+function ClientInfoPacket(siteLocation, browserInfo, webApp) {
+
+    Packet.call(this);
+
+    this.__type = "ClientInfoPacket:#FlashBet.WebSocket.Protocol";
+
+    this.SiteLocation = siteLocation;
+    this.BrowserInfo = browserInfo;
+    this.WebApp = webApp;
+}
+inheritPrototype(ClientInfoPacket, Packet);
+
+//----------------------------------------
+//SubscribeToChatRequestPacket
+function SubscribeToChatRequestPacket() {
+    Packet.call(this);
+    this.__type = "SubscribeToChatRequestPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(SubscribeToChatRequestPacket, Packet);
+//
+
+//----------------------------------------
+//SubscribeToChatRequestPacket
+function NewChatMessagePacket(to, message) {
+    Packet.call(this);
+    this.__type = "NewChatMessagePacket:#FlashBet.WebSocket.Protocol";
+
+    this.To = to;
+    this.Message = message;
+}
+inheritPrototype(NewChatMessagePacket, Packet);
+//
+
+//----------------------------------------
+//MarkChatMessagesAsReadedPacket
+function MarkChatMessagesAsReadedPacket(from, to) {
+    Packet.call(this);
+    this.__type = "MarkChatMessagesAsReadedPacket:#FlashBet.WebSocket.Protocol";
+
+    this.From = from;
+    this.To = to;
+}
+inheritPrototype(MarkChatMessagesAsReadedPacket, Packet);
+//
+
+//----------------------------------------
+//ChatMessagesRequestPacket
+function ChatMessagesRequestPacket(username) {
+    Packet.call(this);
+    this.__type = "ChatMessagesRequestPacket:#FlashBet.WebSocket.Protocol";
+
+    this.Username = username;
+}
+inheritPrototype(ChatMessagesRequestPacket, Packet);
+//
+
+//----------------------------------------
+//ChatUsersRequestPacket
+function ChatUsersRequestPacket() {
+    Packet.call(this);
+    this.__type = "ChatUsersRequestPacket:#FlashBet.WebSocket.Protocol";    
+}
+inheritPrototype(ChatUsersRequestPacket, Packet);
+//
+
+//----------------------------------------
+//UnreadMessagesRequestPacket
+function UnreadMessagesRequestPacket() {
+    Packet.call(this);
+    this.__type = "UnreadMessagesRequestPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(UnreadMessagesRequestPacket, Packet);
+//
+
+//----------------------------------------
+//ChatInfoRequestPacket
+function ChatInfoRequestPacket() {
+    Packet.call(this);
+    this.__type = "ChatInfoRequestPacket:#FlashBet.WebSocket.Protocol";
+}
+inheritPrototype(ChatInfoRequestPacket, Packet);
+//
+
+//----------------------------------------

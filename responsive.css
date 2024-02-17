@@ -1,0 +1,2847 @@
+﻿/*@media (min-width:320px) {
+    .popular_matches_wrapper {
+        width: 100%
+    }
+}*/
+
+@media (min-width:576px) {
+    .container {
+        width: 540px;
+        max-width: 100%
+    }
+
+    .casino-game-box1.col-sm-4 {
+        width: 33.33% !important
+    }
+}
+
+@media (min-width:768px) {
+    .container {
+        width: 720px;
+        max-width: 100%
+    }
+}
+
+@media (min-width:1200px) {
+    .container {
+        width: 1440px;
+        max-width: 100%
+    }
+}
+
+@media (min-width:992px) {
+    .marmara-side-padding {
+        padding-left: 1px !important;
+        padding-right: 1px !important;
+    }
+}
+
+@media (min-width:1700px) {
+    .marmara-side-padding {
+        padding-left: 1px;
+        padding-right: 1px;
+    }
+}
+
+@media screen and (max-width:991px) {
+    .sportbook-event-ply .nav-tabs > li.active > a, .sportbook-event-ply .nav-tabs > li.active > a:focus, .sportbook-event-ply .nav-tabs > li.active > a:hover {
+        background-color: #343039;
+        border-top: 0
+    }
+
+    .Login-form-body .login-html {
+        padding: 90px 30px 50px
+    }
+
+    .home-score, .away-score {
+        font-size: 60px
+    }
+
+        .home-score span {
+            margin-left: -100px
+        }
+
+        .away-score span {
+            margin-left: 10px
+        }
+
+    .score-twodots span {
+        margin-top: 150px
+    }
+
+    *.live-status span {
+        margin: 0
+    }
+
+    .balance-title {
+        top: 30px
+    }
+
+    .balance {
+        top: 50px
+    }
+
+    /*table:not(.table-condensed) tr th {
+        color: #242029
+    }*/
+
+    .modal-body {
+        padding: 5px 20px 65px 20px !important
+    }
+
+    .ticketTotals {
+        width: 100%
+    }
+
+        .ticketTotals label {
+            width: 100%
+        }
+
+    .info-box {
+        width: 100%
+    }
+
+    .fish1 {
+        background: url('../../images/modernTheme/ribice.png') no-repeat -112px 9px;
+        background-size: 350px;
+        position: relative;
+        width: 80px;
+        height: 80px
+    }
+
+    .fish2 {
+        background: url('../../images/modernTheme/ribice.png') no-repeat -300px -300px;
+        background-size: 600px;
+        position: relative;
+        width: 80px;
+        height: 80px
+    }
+    /*
+    .outcome-label-multirow {
+        line-height: 1 !important;
+        padding-top: 25px
+    }*/
+
+
+    .quote-type-change {
+        position: fixed;
+        top: auto;
+        bottom: 8px;
+        right: auto;
+        left: 3px;
+        height: 28px;
+        background-color: #cd4153;
+        font-weight: 400;
+        z-index: 9999;
+        border-radius: 3px;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 28px;
+        cursor: pointer;
+        padding: 0px 10px;
+        color: #fff
+    }
+
+    .btn-bonus-offer-bonus .bonus-value {
+        margin-top: -12px;
+        text-align: center;
+        /*font-size: 5vw*/
+    }
+
+    .btn-bonus-offer-deposit {
+        max-width: 468px;
+        width: 100%;
+        height: 90px;
+        color: #fff;
+        margin: 0 auto;
+        line-height: 84px;
+        cursor: pointer;
+    }
+
+    .btn-bonus-offer-bonus {
+        max-width: 468px;
+        width: 100%;
+        height: 90px;
+        color: #fff;
+        text-align: left;
+        margin: 0 auto;
+        /*padding: 10px;*/
+        cursor: pointer;
+    }
+
+
+
+    .topHeaderLeft a, .topHeaderRight a {
+        display: inline-block;
+        padding: 0 10px;
+        color: #FFF
+    }
+
+    .live_match_data.live_for_update .divOdd div, .match_odds_details .divOdd div {
+        height: unset !important
+    }
+
+        .live_match_data.live_for_update .divOdd div label, .match_odds_details .divOdd div label {
+            overflow-wrap: break-word;
+            width: 200%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 50px;
+        }
+
+    .owl-carousel .prev-slide {
+        background: url(nav-icon.png) no-repeat scroll 0 0;
+        left: 0px
+    }
+
+    .featuredMatches_wrapper.owl-carousel .prev-slide {
+        background: url(nav-icon.png) no-repeat scroll 0 0;
+        left: 0
+    }
+
+    .owl-carousel .next-slide {
+        background: url(nav-icon.png) no-repeat scroll -24px 0px;
+        right: 0
+    }
+
+    .live-score-home, .live-score-away {
+        min-width: 30px;
+        min-height: 30px
+    }
+
+    .divOdd label {
+        width: 100%;
+        padding-left: 4px;
+    }
+
+    .fixturesTable tr td div.match-odd span, .divOddsTable .divOddRow div.match-odd span {
+        padding-right: 10px;
+        padding-top: 0px;
+        padding-left: 0;
+        line-height: 50px;
+        background-color: transparent;
+        font-size: 14px;
+        border: none;
+    }
+
+    .cont-adjusted {
+        margin-left: -18px !important;
+        margin-right: -18px !important
+    }
+
+    .additional-menu {
+        margin-top: -8px !important
+    }
+
+    /*.topHeaderRight {
+        padding-top: 0;
+        display: inline-block;
+        width: 60%;
+        vertical-align: middle;
+        text-align: center;
+        line-height: 50px;
+        float: left
+    }*/
+
+    .topMenu {
+        margin-top: 30px
+    }
+
+    .smallheader .topMenu {
+        margin-top: 0
+    }
+
+    .headerLimit {
+        border-radius: 0;
+        width: 100%;
+        margin-top: 10px
+    }
+
+    .logout {
+        width: 125px !important
+    }
+
+    .infos {
+        float: right;
+        width: 180px !important
+    }
+
+    .logoutButton {
+        width: 150px;
+        font-size: 11px
+    }
+
+    .divTables_wraper {
+        margin: 0
+    }
+
+    .n-footer {
+        height: 35px
+    }
+
+    #chat-window {
+        width: 250px;
+        height: 400px;
+        right: 50px;
+        bottom: 10px
+    }
+
+    #player_wrapper {
+        height: 110px
+    }
+
+    .divOdd {
+        width: 33.33%;
+        display: inline-block;
+        float: left !important;
+        outline: 1px solid #1E1F24 !important;
+        height: 50px
+    }
+
+        .divOdd.has-specialBet-col {
+            width: 26%
+        }
+
+    .divOdds[data-active-outcomes="1"] .divOdd,
+    .divOdds[data-active-outcomes="2"] .divOdd {
+        width: 50%;
+    }
+
+        .divOdds[data-active-outcomes="1"] .divOdd.has-specialBet-col,
+        .divOdds[data-active-outcomes="2"] .divOdd.has-specialBet-col {
+            width: 39%;
+        }
+
+
+    .divOddSpecial {
+        float: left
+    }
+
+    .divOdds .divOddSpecial {
+        display: block;
+        width: 22%;
+        padding: 0px;
+        background: #1E1F24;
+        /*outline: 1px solid #F0F2F7 !important;*/
+        font-size: 14px;
+        box-shadow: none;
+        vertical-align: middle;
+        color: #181818;
+        line-height: 49px;
+        /*height: 60px*/
+    }
+
+    .divOddSpecial label {
+        font-size: 14px;
+        color: #fff;
+        margin: 0;
+    }
+
+    .list-group-item {
+        font-size: 12px
+    }
+
+    .dateheader {
+        display: inline !important
+    }
+
+    .mainMenu {
+        height: 0;
+        border: none;
+        background: none
+    }
+
+        .mainMenu a {
+            font-size: 12px;
+            padding: 0 8px;
+            line-height: 30px
+        }
+
+    #aCasino {
+        display: none
+    }
+
+    #aLogout, #aLogin {
+        margin-right: 5px;
+        display: none !important
+    }
+
+    .mainMenu a.aUserInfo span {
+        font-size: 13px
+    }
+
+    .divHeaderWrapBack {
+        opacity: 1;
+        display: none
+    }
+
+    /*.topHeaderLeft {
+        display: inline-block;
+        width: 40%;
+        line-height: 50px;
+        vertical-align: middle;
+        text-align: center;
+        float: left
+    */
+}
+
+.divHeaderWrap {
+}
+
+.topMenuContent {
+    background-color: #2c2d34;
+    /*border-bottom: 1px #fff solid;*/
+}
+
+.topMenuContent > ul > li > span {
+    color: #fff;
+}
+
+.topMenuContent a {
+    display: block;
+    width: 100%;
+    font-size: 20px;
+    vertical-align: middle;
+    font-weight: 500
+}
+
+    .topMenuContent a:active, .topMenuContent a:hover {
+        color: #fff
+    }
+
+    .topMenuContent a label {
+        padding-left: 10px;
+        line-height: 70px
+    }
+
+    .topMenuContent a div img {
+        display: none
+    }
+
+    .topMenuContent a div span {
+        display: inline-block;
+        font-size: 30px;
+        color: #999;
+        vertical-align: middle
+    }
+
+#aCasino3 i, #aCasino2 i {
+    background: url(../../images/cherry2.png) no-repeat center;
+    background-size: 35px 35px
+}
+
+#aCasino2 i {
+    background-image: url(../../images/cherry1.png);
+    width: 16px;
+    height: 18px;
+    background-size: 100% 100%
+}
+
+
+
+.mainMenu a.aUserInfo {
+    position: absolute;
+    right: 55px;
+    color: #333;
+    text-shadow: none;
+    z-index: 999;
+    top: 10px
+}
+
+    .mainMenu a.aUserInfo:hover {
+        background: none
+    }
+
+#ltrUsername {
+    display: none
+}
+
+.mobile-body .mainContent {
+    display: block;
+}
+
+.divRangeSlider {
+    width: 100%;
+    margin-right: 15px;
+    margin-left: 15px
+}
+
+.mobile-body .mainCategories {
+    width: 240px;
+    margin-left: 0;
+    margin-right: 0
+}
+
+.category {
+    width: 100%
+}
+
+    .category a {
+        font-size: 18px;
+        line-height: 48px;
+        padding-left: 10px;
+        color: #fff;
+        text-transform: uppercase
+    }
+
+    .category .divTournament, .category .divTournament a {
+        height: auto;
+        font-size: 16px;
+        line-height: 55px;
+        color: #fff
+    }
+
+    .category a img {
+        height: 30px;
+        margin-right: 10px
+    }
+
+.tournament-list .divTournament {
+    border-bottom: 1px solid #16171a !important
+}
+
+.divTableHeader {
+    padding: 0 15px;
+    border-bottom: 1px solid #c1c1c1;
+    line-height: 30px;
+    border-right: 4px #333
+}
+
+    .divTableHeader img {
+        margin-left: 0;
+        max-height: 20px
+    }
+
+    .divTableHeader label, .divUserTicketHeader label {
+        font-size: 12px
+    }
+
+.divTables, .fixturesTable {
+    width: auto
+}
+
+.divTables {
+    /*margin-right: 10px;
+        margin-left: 10px;*/
+    margin-top: 0
+}
+
+.fixturesTable {
+    display: block;
+    box-shadow: none;
+    border: none
+}
+
+    .fixturesTable thead {
+        display: none
+    }
+
+    .fixturesTable tbody {
+        display: block
+    }
+
+    .fixturesTable tr {
+        display: block;
+        position: relative;
+        overflow: hidden
+    }
+
+.live-match-list .fixturesTable tr {
+    display: block !important
+}
+
+.fixturesTable tr:first-child {
+    margin-top: 0
+}
+
+.fixturesTable tr td, .fixturesTable tr th {
+    display: inline-block;
+    /*width: auto !important;*/
+    max-width: 100% !important;
+    border: none
+}
+
+.mobile-body .fixturesTable tr td, .fixturesTable tr th {
+    display: block;
+    /*width: auto !important;*/
+    max-width: 100% !important;
+    border: none
+}
+
+.live-match-list .fixturesTable tr td, .live-match-list .fixturesTable tr th {
+    display: block !important
+}
+
+.fixturesTable tr td.tdResult {
+    font-size: 26px;
+    padding: 2px 0
+}
+
+.fixturesTable tr td.tdTime {
+    text-align: left;
+    padding-left: 6px;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 12px
+}
+
+.fixturesTable tr td.tdMatch {
+    padding: 0px 0 3px 5px;
+    text-align: left
+}
+
+    .fixturesTable tr td.tdMatch label {
+        font-size: 16px;
+        font-weight: 500;
+        display: block
+    }
+
+.fixturesTable tr td.betColumn {
+    display: flex !important;
+    display: -webkit-flex !important;
+    justify-content: space-around;
+    -webkit-justify-content: space-around;
+    padding: 0
+}
+
+#divTablesLive .fixturesTable tr td.tdMatch label {
+    font-size: 16px !important
+}
+
+.divLiveExtraInfo {
+    font-size: 14px;
+    color: #999;
+    max-width: 300px;
+    clear: both
+}
+
+#divTablesLive .fixturesTable tr td.tdLiveTime {
+    font-size: 13px
+}
+
+#divTablesLive .fixturesTable tr td.betColumn div {
+    display: flex;
+    display: -webkit-flex;
+    justify-content: space-around;
+    -webkit-justify-content: space-around;
+    width: 100%
+}
+
+#divTablesLive .setScore, #divTablesLive .divTournamentInfo, #divUpcommingLive .divTournamentInfo {
+    color: #999;
+    font-size: 16px;
+    text-align: left
+}
+
+#divTablesLive .fixturesTable tr .betColumn span[data-status="stop"], #divMatchDetailsLive .divOddRow .divOdd div[data-status="stop"] {
+    background: linear-gradient(to bottom,rgba(227,70,54,1) 0,rgba(199,62,47,1) 100%);
+    border: solid 1px #d74937
+}
+
+#divTablesLive .fixturesTable tr.started .betColumn td.active, #divTablesLive .fixturesTable tr.paused .betColumn td.active, #divMatchDetailsLive .divOdd div.active {
+    color: #1d1b1c !important;
+    border: 1px solid #002a52
+}
+
+.fixturesTable tr td.betColumn[data-source="Odd2"], .fixturesTable tr td.betColumn[data-source="Odd3"], .fixturesTable tr td.tdSpecial {
+    display: none
+}
+
+.fixturesTable tr td.tdIcon {
+    position: absolute;
+    right: 5px;
+    top: 20px;
+    padding: 0;
+    margin-top: 10px
+}
+
+.tdIcon label {
+    padding: 2px 8px;
+    display: inline-block
+}
+
+.fixturesTable tr td.tdIcon .dropdown-menu {
+    left: -160px;
+    top: -2px
+}
+
+.fixturesTable tr td.more {
+    position: absolute;
+    right: 30px;
+    top: 30px;
+    padding: 0;
+    margin-top: 10px
+}
+
+.fixturesTable tr td.moreOdds {
+    display: block;
+    position: absolute;
+    top: 13px;
+    right: 3px
+}
+
+#divTablesLive .fixturesTable tr.started .tdResult, #divTablesLive .fixturesTable tr.paused td.tdResult {
+    position: absolute;
+    right: 50px;
+    top: 11px;
+    padding: 3px 10px;
+    font-size: 18px
+}
+
+#divTablesLive .fixturesTable tr td.moreOdds {
+    top: 4px;
+    right: 3px
+}
+
+#divUpcommingLive .tdIcon {
+    top: 11px
+}
+
+#divUpcommingLive .fixturesTable tr td.moreOdds {
+    top: 4px
+}
+
+#divUpcommingLive .fixturesTable tr.notstarted {
+    position: relative
+}
+
+    #divUpcommingLive .fixturesTable tr.notstarted td.tdLiveTime {
+        right: 45px;
+        top: 44px;
+        position: absolute;
+        color: #26799d;
+        font-weight: 600;
+        font-size: 13px
+    }
+
+        #divUpcommingLive .fixturesTable tr.notstarted td.tdLiveTime label br {
+            content: " ";
+            margin-right: 5px
+        }
+
+    #divUpcommingLive .fixturesTable tr.notstarted .divTournamentInfo {
+        max-width: 220px
+    }
+
+#divUpcommingLive tr td.tdSport {
+    position: absolute;
+    right: 15px;
+    top: 43px
+}
+
+    #divUpcommingLive tr td.tdSport img {
+        max-width: 20px
+    }
+
+#divTablesLive .fixturesTable tr td.tdMatch span.yellowCards {
+    float: left;
+    margin-right: 5px;
+    margin-top: 2px;
+    display: inline-block
+}
+
+#divTablesLive .fixturesTable tr td.tdMatch span.redCards {
+    float: left;
+    margin-right: 5px;
+    margin-top: 2px;
+    display: inline-block
+}
+
+#divTablesLive .fixturesTable tr[halftime="true"] {
+    display: none !important;
+    visibility: hidden
+}
+
+/*.fixturesTable tr:hover td, .fixturesTable tr:hover td.tdSpecial, #divTablesLive .fixturesTable tr.started:hover td.tdSpecial, #divTablesLive .fixturesTable tr.paused:hover td.tdSpecial {
+        background-color: transparent;
+        border-bottom: 0;
+        border-top: 0
+    }*/
+
+#divUpcommingLive .fixturesTable tr:hover td:first-child, #divTablesLive .fixturesTable tr:hover td:first-child {
+    border-bottom: 0px solid transparent;
+    border-top: 0px solid transparent
+}
+
+#divMatchExtraOdds.fixturesTable {
+    padding: 0;
+    margin: -7px -2px
+}
+
+.divOdds {
+    width: 100%;
+    max-width: 100%
+}
+
+.divOddRow {
+    display: block;
+    padding: 0;
+    background-color: #2c2d34
+}
+
+.oddName {
+    color: #fff;
+    padding: .25em 16px .25em .75em;
+    width: auto;
+    text-align: left;
+    position: relative
+}
+
+    .oddName i {
+        float: right;
+        display: inline-block;
+        line-height: 22px;
+        position: absolute;
+        right: 5px;
+        top: 4px
+    }
+
+.divOddRow:nth-child(2n+1) {
+    background-color: #2c2d34
+}
+
+.divOddTable {
+    display: flex;
+    padding: 5px
+}
+
+#divMatchDetailsLive .divOdd label[data-bind="OutCome"] {
+    display: none
+}
+
+.divTicket {
+    margin-left: 0;
+    /*display: none;*/
+    margin-right: 0;
+    z-index: 100;
+    width: 100%
+}
+
+.mobile-body .divTicket {
+    margin-left: 0;
+    display: none;
+    margin-right: 0;
+    z-index: 100;
+    width: 100%
+}
+
+.sticky {
+    position: relative;
+    width: auto !important
+}
+
+#aSportsbook, #aLive {
+    display: none
+}
+
+#divProfiles .fixturesTable thead {
+    display: block
+}
+
+#divProfiles .fixturesTable tr {
+    display: flex;
+    display: -webkit-flex;
+    justify-content: center;
+    -webkit-justify-content: center
+}
+
+    #divProfiles .fixturesTable tr td {
+        padding-left: 5px;
+        display: block;
+        width: 100% !important
+    }
+
+    #divProfiles .fixturesTable tr th {
+        font-size: 9px;
+        word-wrap: break-word;
+        word-break: break-all;
+        width: 100% !important
+    }
+
+#divProfiles .fixturesTable #ticketsTableBody tr {
+    margin: 10px 0
+}
+
+#divProfiles .fixturesTable tr td[data-bind="Combinations"], #divProfiles .fixturesTable tr th[data-translate="TotalBets"], #divProfiles .fixturesTable tr td[data-bind="Date"], #divProfiles .fixturesTable tr th:first-child {
+    display: none
+}
+
+#divProfiles .fixturesTable tr td.tdStatus label {
+    font-size: 7px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis
+}
+
+.divProfileFilters {
+    display: block;
+    float: none;
+    text-align: center
+}
+
+    .divProfileFilters span {
+        margin: 0 3px
+    }
+
+        .divProfileFilters span.ChangePassword {
+            margin-left: 3px
+        }
+
+
+.betFields div input[type=text] {
+    line-height: 38px;
+    height: 38px;
+    font-size: 18px
+}
+
+.divLogin {
+    padding: 40px 20px;
+    width: 100%
+}
+
+    .divLogin input[type=text], .divLogin input[type=password] {
+        width: 100%;
+        min-width: 244px;
+        font-size: 14px
+    }
+
+.TicketToggleButtonMobile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    background: #16171a;
+    font-weight: bold;
+    font-size: 11px;
+    cursor: pointer;
+    text-align: center;
+    color: #181818;
+    vertical-align: middle;
+    padding: 5px 10px;
+    z-index: 10001;
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    height: 60px;
+    border-top: 1px solid #ffc900;
+    border-radius: 8px 8px 0 0
+}
+
+.panel-heading {
+    border-bottom: 1px solid #bbb;
+    height: 60px;
+    padding: 20px
+}
+
+#divBetFields > div:first-child, #divBetFields > div:last-child {
+    width: 19%
+}
+
+.betFields .betField {
+    width: 59%
+}
+
+.divPartionsRight {
+    /*display: none !important;*/
+    padding-bottom: 0
+}
+
+.mobile-body .divPartionsRight {
+    display: none !important;
+    padding-bottom: 0
+}
+
+.TicketMobileShow .divPartionsRight {
+    display: block !important
+}
+
+.TicketMobileShow #TicketToggleButtonMobileUp, #TicketToggleButtonMobileDown {
+    display: none
+}
+
+#TicketToggleButtonMobileUp, .TicketMobileShow #TicketToggleButtonMobileDown {
+    display: block
+}
+
+.TicketMobileShow .divTables, .TicketMobileShow #CentralDataHolder_wraper, .TicketMobileShow #live_data_holder {
+    display: none
+}
+
+.TicketMobileShow .divTicket,
+.TicketMobileShow .jackpot-section {
+    display: block
+}
+
+
+.TicketMobileShow .mainContent {
+    display: none
+}
+
+.xsBetColumnHeader :first-child {
+    display: flex
+}
+
+.xsBetColumnHeader .betColumnHeader label, .betColumn label {
+    display: flex;
+    padding: 0;
+    margin: 5px 4px 5px 2px;
+    width: 0;
+    font-weight: 600 !important;
+}
+
+.xsBetColumnHeader .betColumnHeader span {
+    text-align: center;
+    margin: 0 3px;
+    padding: 2px
+}
+
+.xsBetColumnHeader .betColumnHeader {
+    display: flex;
+    display: -webkit-flex;
+    height: 24px !important;
+    width: 100%
+}
+
+.xsBetColumnHeader.live .betColumnHeader {
+    position: absolute;
+    top: 80px;
+    width: 100%
+}
+
+.fixturesTable .tdMatch.live {
+    width: 100% !important;
+    display: block;
+    padding-left: 5px;
+    height: 43px
+}
+
+    .fixturesTable .tdMatch.live label {
+        line-height: 110%;
+        display: block;
+        margin-bottom: 0 !important
+    }
+
+.fixturesTable .betColumn.live {
+    border-left: none
+}
+
+/*.fixturesTable .trMatch.live_match_data td:nth-child(4) span {
+        width: 100% !important
+    }
+
+    .fixturesTable .trMatch.live_match_data td:first-child {
+        width: 100% !important;
+        height: 40px
+    }
+
+        .fixturesTable .trMatch.live_match_data td:first-child span {
+            padding: 5px
+        }
+
+    .fixturesTable .trMatch.live_match_data .live.tdFavorite {
+        top: 0;
+        left: 59%;
+        border: none !important;
+        position: absolute;
+        width: 49px !important;
+        display: block;
+        padding-left: 5px;
+        padding-right: 5px
+    }
+
+        .fixturesTable .trMatch.live_match_data .live.tdFavorite span {
+            padding: 5px 9px;
+            font-size: 15px
+        }
+
+    .fixturesTable .trMatch.live_match_data .live.more {
+        top: 0;
+        right: 0px !important;
+        border: none !important;
+        position: absolute;
+        width: 82px !important;
+        margin: 0px 3px;
+        display: block;
+        padding: 3px 2px
+    }
+
+        .fixturesTable .trMatch.live_match_data .live.more span {
+            padding: 5px 14px;
+            font-size: 15px;
+            margin: 0
+        }
+
+    .fixturesTable .trMatch.live_match_data .live.tdScore {
+        top: 40px;
+        right: 0;
+        border: none !important;
+        position: absolute;
+        width: 88px !important;
+        margin: 0
+    }
+
+        .fixturesTable .trMatch.live_match_data .live.tdScore span {
+            padding: 7px 10px;
+            margin-right: 3px !important
+        }
+*/ /*.fixturesTable .trMatch.live_match_data td:nth-child(4) span {
+        width: 100% !important
+    }
+
+    .fixturesTable .trMatch.live_match_data td:first-child {
+        width: 100% !important;
+        height: 40px
+    }
+
+        .fixturesTable .trMatch.live_match_data td:first-child span {
+            padding: 5px
+        }
+
+    .fixturesTable .trMatch.live_match_data .live.tdFavorite {
+        top: 0;
+        left: 59%;
+        border: none !important;
+        position: absolute;
+        width: 49px !important;
+        display: block;
+        padding-left: 5px;
+        padding-right: 5px
+    }
+
+        .fixturesTable .trMatch.live_match_data .live.tdFavorite span {
+            padding: 5px 9px;
+            font-size: 15px
+        }
+
+    .fixturesTable .trMatch.live_match_data .live.more {
+        top: 0;
+        right: 0px !important;
+        border: none !important;
+        position: absolute;
+        width: 82px !important;
+        margin: 0px 3px;
+        display: block;
+        padding: 3px 2px
+    }
+
+        .fixturesTable .trMatch.live_match_data .live.more span {
+            padding: 5px 14px;
+            font-size: 15px;
+            margin: 0
+        }
+
+    .fixturesTable .trMatch.live_match_data .live.tdScore {
+        top: 40px;
+        right: 0;
+        border: none !important;
+        position: absolute;
+        width: 88px !important;
+        margin: 0
+    }
+
+        .fixturesTable .trMatch.live_match_data .live.tdScore span {
+            padding: 7px 10px;
+            margin-right: 3px !important
+        }
+*/
+.n-footer .sections-wrap img {
+    width: 55px
+}
+
+.sport-filter-header {
+    display: none;
+    margin-top: -40px;
+    padding-top: 40px;
+    padding-bottom: 2px
+}
+
+#kuponalan {
+    text-align: left
+}
+
+.casino-game-box {
+    padding: 3px;
+    margin: 0 0 5px;
+    width: calc(100% - 10px);
+    border: 1px solid #eee;
+    background-color: #fff
+}
+
+    .casino-game-box .casino-game-image {
+        display: inline-block;
+        width: 79px;
+        height: 70px
+    }
+
+        .casino-game-box .casino-game-image img {
+            width: 79px;
+            height: 65px;
+            border: none;
+            border-radius: 3px
+        }
+
+    .casino-game-box .box-detail {
+        position: relative;
+        display: inline-block;
+        height: auto;
+        top: -14px;
+        width: calc(100% - 90px)
+    }
+
+    .casino-game-box a {
+        float: left;
+        width: 100%;
+        height: 65px
+    }
+
+    .casino-game-box .casino-game-title {
+        font-size: 16px;
+        color: #323232
+    }
+
+    .casino-game-box .box-detail .casino-Category-title {
+        color: #105b63
+    }
+
+    .casino-game-box .right-arrow {
+        display: block;
+        width: 14px;
+        position: absolute;
+        top: 4px;
+        right: -5px;
+        color: #105b63
+    }
+
+.mobileAccountMenu, .mobileAccountDepositMenu {
+    position: absolute;
+    top: 180px;
+    width: 100%;
+    z-index: 999
+}
+
+.Account-menu-btn.active, .Account-deposit-menu-btn.active {
+    border-bottom: 3px solid #cd4153
+}
+
+.mobileAccountDepositMenuButton {
+    padding: 6px 12px;
+    text-align: center;
+    background-color: #3f3946;
+    border-radius: 3px;
+    margin: 5px 5px !important
+}
+
+.table tr {
+    height: 40px
+}
+
+.td_mbs_lock span {
+    float: none !important
+}
+
+.casino-game-wrapper {
+    display: inline-block;
+    float: left;
+    padding: 0 10px 0 0;
+    width: 50%
+}
+
+.casino-game {
+    display: inline-block;
+    width: 100%
+}
+
+.casino-image-wrapper {
+    overflow: hidden;
+    width: 100%;
+    /*height: 104px;*/
+    aspect-ratio: 1/1;
+    position: relative;
+    text-align: center;
+    background-color: #16171a;
+    box-shadow: 0px 10px 20px #00000033;
+    /*border: 1px solid #DFE2EB;*/
+    border-radius: 4px
+}
+
+.home-promo-image-wrapper {
+    overflow: hidden;
+    width: 425px;
+    height: 170px;
+    position: relative;
+    text-align: center;
+    background-color: #202323;
+    border-radius: 4px;
+}
+
+.game-highlighted .casino-image-wrapper {
+    width: 532px;
+    height: 397px;
+}
+
+.squared_images .game-highlighted .casino-image-wrapper {
+    width: 500px;
+    height: 500px;
+}
+
+#slotsOfTheDay .casino-image-wrapper,
+#liveSlotsOfTheDay .casino-image-wrapper {
+    width: 166px;
+    height: 166px;
+}
+
+
+@media screen and (min-width:992px) {
+    .container {
+        width: 1160px;
+        max-width: 100%
+    }
+
+
+    /*    .popular_matches_wrapper {
+        width: 870px
+    }
+
+    body.smallWidth .popular_matches_wrapper {
+        width: 570px
+    }*/
+
+
+    .squared_images.casino-page .casino-games {
+        width: calc(100% + 15px);
+    }
+
+    .casino-game-box {
+        width: calc(100% / 5 - 10px) !important;
+        max-height: 150px !important;
+        box-sizing: border-box;
+        width: 210px;
+        height: 170px;
+        cursor: pointer;
+        position: relative;
+        margin: 5px;
+        padding-bottom: 30px;
+        color: #363636;
+        background: #363636;
+        float: left;
+        overflow: hidden;
+        border-radius: 3px;
+        transform: scale(1)
+    }
+    .casino-game-wrapper {
+        display: inline-block;
+        float: left;
+        padding: 0px;
+        padding-right: 15px;
+        padding-top: 15px;
+        width: auto;
+    }
+    .casino-game{
+        display:inline-block;
+        width:256px;
+    }
+    .casino-image-wrapper {
+        overflow: hidden;
+        width: 256px;
+        height: 160px;
+        position: relative;
+        text-align: center;
+        background-color: #fff;
+        box-shadow: 0px 10px 20px #00000033;
+        /*border: 1px solid #DFE2EB;*/
+    }
+    .home-promo-image-wrapper {
+        overflow: hidden;
+        width: 425px;
+        height: 170px;
+        position: relative;
+        text-align: center;
+        background-color: #202323;
+        border-radius: 5px;
+    }
+    .game-highlighted .casino-image-wrapper {
+        width: 532px;
+        height: 397px;
+    }
+    .game-highlighted .casino-game {
+        width: 532px;
+    }
+
+    .squared_images .casino-game {
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+    }
+    .squared_images .casino-image-wrapper {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        position: relative;
+        text-align: center;
+        background-color: #fff;
+        box-shadow: 0px 10px 20px #00000033;
+        /*border: 1px solid #DFE2EB;*/
+        border-radius: 4px;
+        background-color: #1B2027;
+    }
+    .squared_images .game-highlighted .casino-image-wrapper {
+        width: 500px;
+        height: 500px;
+    }
+    .squared_images .game-highlighted .casino-game {
+        width: auto;
+    }
+
+    #slotsOfTheDay .casino-image-wrapper,
+    #liveSlotsOfTheDay .casino-image-wrapper {
+        width: 166px;
+        height: 166px;
+    }
+
+
+    .casino-vendor-row:hover .casino-vendor-image {
+        transform: scale(1.1);
+        opacity: 0.3;
+    }
+
+        .casino-vendor-row .casino-vendor-image {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            transition: all .5s ease
+        }
+
+    .casino-game:hover .casino-img {
+        /*transform: scale(1.1);*/
+        /*opacity: 0.3;*/
+    }
+
+    .casino-game .clearfix:after{
+        display:none;
+    }
+    .squared_images .casino-game:hover .casino-img {
+        /*transform: scale(1.1) translateX(-48%);*/
+        mask: transparent linear-gradient(180deg, #00000000 0%, #ffc900 100%) 0% 0% no-repeat padding-box;
+        color: #1B2027;
+    }
+
+    .casino-game .casino-img {
+        position: relative;
+        z-index: 0;
+        transition: all .5s ease
+    }
+
+    /*.aLanguage ul, .aLanguageMobile ul {
+        left: 5px
+    }*/
+
+    .casino-vendor-row .box-detail {
+        display: none;
+        height: 100px;
+        top: 40px;
+        position: absolute;
+        color: #fff;
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
+        cursor:pointer;
+    }
+
+    .casino-game .box-detail {
+        display: none;
+        height: 100px;
+        top: 0;
+        position: absolute;
+        color: #fff;
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
+        cursor: pointer;
+        height: 100%;
+        align-items: center;
+    }
+
+    .casino-game:hover .box-detail {
+        display: flex;
+    }
+
+        .casino-game:hover .box-detail:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: transparent linear-gradient(180deg, #00000000 0%, #ffc900 100%) 0% 0% no-repeat padding-box;
+        }
+
+    .game-highlighted .casino-game .box-detail {
+        top: 92px;
+    }
+    
+    .squared_images .game-highlighted .casino-game .box-detail {
+        top: 136px;
+    }
+
+    .casino-vendor-row:hover .box-detail {
+        display: block
+    }
+
+    .casino-dots-row:hover .casino-day-slot-image {
+        transform: scale(1.1);
+        opacity: 0.3;
+    }
+
+    .casino-dots-row .casino-day-slot-image {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        transition: all .5s ease
+    }
+
+    .casino-dots-row .box-detail {
+        display: none;
+        height: 100px;
+        top: 0px;
+        position: absolute;
+        color: #fff;
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .casino-dots-row:hover .box-detail {
+        display: block
+    }
+
+
+    .casino-popular-row:hover .casino-popular-image {
+        transform: scale(1.1);
+        opacity: 0.3;
+    }
+
+    .casino-popular-row .casino-popular-image {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        transition: all .5s ease;
+        background-size: cover !important;
+        display: block;
+    }
+
+    .casino-popular-row .box-detail {
+        display: none;
+        height: 100px;
+        top: 40px;
+        position: absolute;
+        color: #fff;
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .casino-popular-row:hover .box-detail {
+        display: block
+    }
+
+
+
+    .live-score-home, .live-score-away {
+        min-width: 50px;
+        min-height: 30px
+    }
+
+    #small-chat {
+        bottom: 20px;
+        right: 300px
+    }
+
+    #chat-window {
+        width: 300px;
+        height: 480px;
+        right: 350px;
+        bottom: 20px
+    }
+
+    #player_wrapper {
+        height: 120px
+    }
+
+    .divOdd {
+        float: left
+    }
+
+    .mobile-body .divPartionsRight {
+        width: 280px
+    }
+
+    .divRangeSlider {
+        margin-left: 0;
+        margin-right: 0
+    }
+
+    .mobile-body .mainCategories {
+        margin-left: 0;
+        margin-right: 0
+    }
+
+    .betColumn[data-source="Odd3"] span {
+        width: 45%
+    }
+
+    .betColumn[data-source="Odd3HT"] span {
+        width: 45%
+    }
+
+    .topMenuContent a {
+        padding: 0;
+        margin-left: -2px;
+        margin-right: -2px
+    }
+
+        .topMenuContent a:active, .topMenuContent a:hover {
+            color: #fff
+        }
+
+    .tdIcon label {
+        font-size: 12px;
+        margin: 0 0px
+    }
+
+    .moreOdds label {
+        min-width: 30px;
+        margin: 0 10px 0 0px;
+        font-size: 10px
+    }
+
+    .sticky {
+        width: 280px
+    }
+
+    .divTableHeader label, .divUserTicketHeader label {
+        font-size: 12px
+    }
+
+    .betColumn .specialOdd {
+        padding: 9px 0px 6px
+    }
+
+    .sport-filter-header {
+        display: block !important
+    }
+
+    .plus-sign-column {
+        min-width: 29px !important;
+        width: 32px !important
+    }
+
+        .plus-sign-column label {
+            margin: 0
+        }
+}
+
+@media screen and (min-width:1500px) {
+    /*   .popular_matches_wrapper {
+        width: 1120px
+    }*/
+
+    #player_wrapper {
+        height: 250px;
+        height: 170px
+    }
+
+    /*   body.smallWidth .popular_matches_wrapper {
+        width: 300px
+    }*/
+
+    .casino-game-box {
+        width: calc(100% / 7 - 10px) !important;
+        max-height: 200px !important
+    }
+
+        .casino-game-box .box-detail {
+            top: 50px
+        }
+
+    .live-score-home, .live-score-away {
+        min-width: 50px;
+        min-height: 30px
+    }
+
+    .live-datetime span {
+        font-size: 1.5vw
+    }
+
+    #small-chat {
+        bottom: 20px;
+        right: 300px
+    }
+
+    #chat-window {
+        width: 300px;
+        height: 480px;
+        right: 350px;
+        bottom: 20px
+    }
+
+    .divOdd {
+        float: left
+    }
+
+    .divRangeSlider {
+        margin-left: 0;
+        margin-right: 0
+    }
+
+    .mobile-body .mainCategories {
+        margin-left: 0;
+        margin-right: 0
+    }
+
+    .category {
+        width: 100%
+    }
+
+        .category > a {
+            font-size: 15px;
+            line-height: 45px;
+            color: #fff
+        }
+
+    .topMenuContent a {
+        font-size: 18px;
+        padding: 0;
+        margin-left: -2px;
+        margin-right: -2px
+    }
+
+        .topMenuContent a div span {
+            font-size: 18px
+        }
+
+    .category .divTournament {
+        height: 40px
+    }
+
+        .category .divTournament a {
+            height: 45px;
+            font-size: 14px;
+            color: #fff
+        }
+
+    .oddName {
+        font-size: 13px
+    }
+
+    .divOdd div {
+        font-size: 16px
+    }
+
+    .divOdd label {
+        font-size: 13px
+    }
+
+    .betColumn[data-source="Odd3"] span {
+        width: 43%
+    }
+
+    .betColumn[data-source="Odd3HT"] span {
+        width: 44%
+    }
+
+    .plus-sign-column {
+        min-width: 32px !important;
+        width: 42px !important
+    }
+
+        .plus-sign-column label {
+            margin: 0
+        }
+}
+
+@media screen and (max-width:1360px) {
+    /*.tdCompetitors {
+        min-width: 124px !important;
+        max-width: 124px !important
+    }*/
+
+    .competitors {
+        display: inline-block;
+        width: 100%;
+        font-size: 14px !important
+    }
+
+        .competitors label, .tdCompetitors label {
+            font-size: 14px !important;
+            margin: 0
+        }
+
+    .competitors-dash {
+        display: none !important
+    }
+}
+
+@media screen and (min-width:1361px) {
+    .competitors {
+        max-width: 47% !important
+    }
+}
+
+@media (max-width:1281px) {
+    .fixture--large .highlightContainer .broadcaster.highlightBroadcasterLogo, .fixture .highlightContainer .broadcaster.highlightBroadcasterLogo {
+        padding-left: .5rem
+    }
+
+    .fixture--large .eventsContainer, .fixture--large .highlightName, .fixture--large .teams, .fixture .eventsContainer, .fixture .highlightName, .fixture .teams {
+        width: 55%
+    }
+
+        .fixture--large .eventsContainer .overview .stadiumName, .fixture--large .teams .overview .stadiumName, .fixture .eventsContainer .overview .stadiumName, .fixture .teams .overview .stadiumName {
+            display: none
+        }
+
+        .fixture--large .eventsContainer.referee, .fixture--large .teams.referee, .fixture .eventsContainer.referee, .fixture .teams.referee {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e8e8e8
+        }
+
+            .fixture--large .eventsContainer.referee .overview, .fixture--large .teams.referee .overview, .fixture .eventsContainer.referee .overview, .fixture .teams.referee .overview {
+                padding-bottom: 0;
+                padding-right: 0
+            }
+
+                .fixture--large .eventsContainer.referee .overview > .arrow-right, .fixture--large .teams.referee .overview > .arrow-right, .fixture .eventsContainer.referee .overview > .arrow-right, .fixture .teams.referee .overview > .arrow-right {
+                    margin-top: 0;
+                    top: 1.6rem
+                }
+
+        .fixture--large .eventsContainer .referees, .fixture--large .teams .referees, .fixture .eventsContainer .referees, .fixture .teams .referees {
+            border-left: 0;
+            width: auto;
+            background: #f0f0f0;
+            border-top: 1px solid #e8e8e8;
+            display: block
+        }
+
+        .fixture--large .eventsContainer .ref, .fixture--large .teams .ref, .fixture .eventsContainer .ref, .fixture .teams .ref {
+            font-family: 'Open Sans', sans-serif;
+            margin-right: 0
+        }
+
+        .fixture--large .eventsContainer .refLabel, .fixture--large .teams .refLabel, .fixture .eventsContainer .refLabel, .fixture .teams .refLabel {
+            display: inline-block
+        }
+
+    .fixture--large .overview .stadiumName, .fixture .overview .stadiumName {
+        display: none
+    }
+
+    .fixture--large.referee, .fixture.referee {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #e8e8e8
+    }
+
+        .fixture--large.referee .overview, .fixture.referee .overview {
+            padding-bottom: 0;
+            padding-right: 0
+        }
+
+            .fixture--large.referee .overview .referees, .fixture.referee .overview .referees {
+                border-top: 0 solid #e8e8e8;
+                margin-top: 0
+            }
+
+            .fixture--large.referee .overview > .arrow-right, .fixture.referee .overview > .arrow-right {
+                margin-top: 0;
+                top: 1.6rem
+            }
+
+    .fixture--large .referees, .fixture .referees {
+        border-left: 0;
+        width: auto;
+        background: #f0f0f0;
+        border-top: 1px solid #e8e8e8;
+        margin: .5rem -4rem -.5rem;
+        display: block
+    }
+
+    .fixture--large .ref, .fixture .ref {
+        font-family: 'Open Sans', sans-serif;
+        margin-right: 0
+    }
+
+    .fixture--large .refLabel, .fixture .refLabel {
+        display: inline-block
+    }
+}
+
+@media (min-width:1282px) {
+}
+
+@media (max-width:768px) {
+    #outercont #innercont {
+        padding: 25px
+    }
+
+    #content-commingsoon {
+        padding: 25px
+    }
+
+    .big-trigger {
+        width: 49%
+    }
+
+    .fixture--large .badge-25, .fixture .badge-25 {
+        display: none
+    }
+
+    .fixture--large .overview .score, .fixture .overview .score {
+        line-height: 2.4rem;
+        top: 50%;
+        margin-top: -1.2rem
+    }
+
+        .fixture--large .overview .score span, .fixture .overview .score span {
+            line-height: 2.4rem
+        }
+
+    .fixture--large .team, .fixture .team {
+        padding-left: 3.5rem;
+        padding-left: 7rem
+    }
+
+        .fixture--large .team:first-of-type, .fixture .team:first-of-type {
+            padding-right: 3.5rem;
+            padding-left: 0;
+            padding-right: 7rem
+        }
+
+    .fixture--large .teamEvents.home .info, .fixture .teamEvents.home .info {
+        margin-right: 2rem
+    }
+
+    .fixture--large .teamEvents.away .info, .fixture .teamEvents.away .info {
+        margin-left: 2rem
+    }
+
+    .fixture--large .referees, .fixture .referees {
+        text-align: left
+    }
+
+    .fixture--large .ref, .fixture .ref {
+        text-align: center
+    }
+
+        .fixture--large .ref .refLabelMobile, .fixture .ref .refLabelMobile {
+            display: initial;
+            vertical-align: bottom;
+            font-weight: 700;
+            margin-right: .5rem
+        }
+
+    .more {
+        right: 30px !important
+    }
+
+    .fixture--large .score, .fixture--large time, .fixture .score, .fixture time {
+        font-size: 1.2rem;
+        width: 5rem;
+        margin-left: -2.5rem
+    }
+
+        .fixture--large .score span, .fixture--large time span, .fixture .score span, .fixture time span {
+            padding: 0 .2rem
+        }
+
+    .fixture--large time, .fixture time {
+        font-size: 1.1rem
+    }
+
+    .fixture--large .team:not(:first-of-type) .badge-25, .fixture .team:not(:first-of-type) .badge-25 {
+        left: 3.5rem
+    }
+
+    .fixture--large .team:first-of-type .badge-25, .fixture .team:first-of-type .badge-25 {
+        right: 3.5rem
+    }
+
+    .fixture--large .teamName, .fixture .teamName {
+        font-size: 1.2rem;
+        font-weight: 400
+    }
+}
+
+@media (max-width:1025px) {
+    .fixture--large .matchDetails, .fixture .matchDetails {
+        padding-left: 0
+    }
+
+    .fixture--large .eventsContainer, .fixture--large .highlightName, .fixture--large .teams, .fixture .eventsContainer, .fixture .highlightName, .fixture .teams {
+        width: 100%;
+        padding-right: 0
+    }
+
+    .fixture--large .highlightName, .fixture--large .teams, .fixture .highlightName, .fixture .teams {
+        padding: .5rem 2.5rem
+    }
+
+    .fixture--large .broadcaster, .fixture .broadcaster {
+        padding: .3rem 0;
+        margin: 0 0 1rem;
+        background: #333;
+        display: block;
+        border: 0;
+        text-align: center;
+        color: #eee;
+        position: relative;
+        font-size: 1rem
+    }
+
+        .fixture--large .broadcaster:after, .fixture .broadcaster:after {
+            content: " ";
+            display: block;
+            clear: both
+        }
+
+        .fixture--large .broadcaster .main, .fixture .broadcaster .main {
+            float: left;
+            width: 50%;
+            padding-right: .5rem
+        }
+
+        .fixture--large .broadcaster .channel, .fixture .broadcaster .channel {
+            float: left;
+            width: 50%;
+            text-align: left;
+            margin-left: 0;
+            padding-left: .5rem;
+            border-color: #fff;
+            padding-left: 1rem
+        }
+
+        .fixture--large .broadcaster:before, .fixture .broadcaster:before {
+            content: '';
+            display: block;
+            border: 4px solid transparent;
+            border-bottom-color: #333;
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            margin-left: -4px
+        }
+
+        .fixture--large .broadcaster.noChannel .main, .fixture .broadcaster.noChannel .main {
+            width: 100%;
+            padding-right: 0;
+            text-align: center
+        }
+
+    .fixture--large.live, .fixture.live {
+        background-color: transparent;
+        border-bottom: 0
+    }
+
+        .fixture--large.live .overview, .fixture.live .overview {
+            position: relative;
+            padding: 0
+        }
+
+        .fixture--large.live .long, .fixture.live .long {
+            display: none
+        }
+
+        .fixture--large.live .short, .fixture.live .short {
+            display: inline-block;
+            vertical-align: baseline
+        }
+
+        .fixture--large.live .team:first-of-type, .fixture.live .team:first-of-type {
+            padding-left: 4rem
+        }
+
+        .fixture--large.live:focus .teams, .fixture.live:focus .teams {
+            background: #b60040
+        }
+
+    .fixture--large.referee .overview, .fixture.referee .overview {
+        padding: 0
+    }
+
+    .fixture.referee {
+        border-bottom: 0;
+        margin-bottom: 0
+    }
+
+    .fixture .referees {
+        border-top: 0 solid #e8e8e8;
+        margin: 0;
+        width: 100%
+    }
+
+    .fixture .ref {
+        border-top: 1px solid #e8e8e8;
+        width: 100%
+    }
+
+    .fixture .overview {
+        padding: 0
+    }
+
+        .fixture .overview > .arrow-right {
+            right: 1rem
+        }
+
+    .fixture .highlightName, .fixture .teams {
+        padding: .5rem 2.5rem
+    }
+
+    .fixture .matchDetails {
+        padding-left: 0
+    }
+
+    .fixture .eventsContainer, .fixture .highlightName, .fixture .teams {
+        width: 100%;
+        padding-right: 0
+    }
+
+    .fixture .broadcaster {
+        padding: .3rem 0;
+        margin: 0 0 1rem;
+        background: #333;
+        display: block;
+        border: 0;
+        text-align: center;
+        color: #eee;
+        position: relative;
+        font-size: 1rem
+    }
+
+        .fixture .broadcaster:after {
+            content: " ";
+            display: block;
+            clear: both
+        }
+
+        .fixture .broadcaster .main {
+            float: left;
+            width: 50%;
+            padding-right: .5rem
+        }
+
+        .fixture .broadcaster .channel {
+            float: left;
+            width: 50%;
+            text-align: left;
+            margin-left: 0;
+            padding-left: .5rem;
+            border-color: #fff;
+            padding-left: 1rem
+        }
+
+        .fixture .broadcaster:before {
+            content: '';
+            display: block;
+            border: 4px solid transparent;
+            border-bottom-color: #333;
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            margin-left: -4px
+        }
+
+        .fixture .broadcaster.noChannel .main {
+            width: 100%;
+            padding-right: 0;
+            text-align: center
+        }
+
+    .fixture.live {
+        background-color: transparent;
+        border-bottom: 0
+    }
+
+        .fixture.live .overview {
+            position: relative;
+            padding: 0
+        }
+
+        .fixture.live .long {
+            display: none
+        }
+
+        .fixture.live .short {
+            display: inline-block;
+            vertical-align: baseline
+        }
+
+        .fixture.live .team:first-of-type {
+            padding-left: 4rem
+        }
+
+        .fixture.live:focus .teams {
+            background: #b60040
+        }
+
+    .fixture.referee .overview {
+        padding: 0
+    }
+
+    a.fixture:focus .broadcaster, a.fixture:hover .broadcaster {
+        color: #333
+    }
+
+    .fixture--large .overview .broadcaster.broadcaster--multiple .liveOn {
+        display: none
+    }
+
+    .fixture--large .overview .broadcaster.broadcaster--multiple {
+        text-align: center;
+        width: 100%;
+        padding: 0;
+        max-width: none
+    }
+
+    .fixture--large .overview .broadcaster--stacked {
+        width: 100%;
+        margin-bottom: 0
+    }
+
+        .fixture--large .overview .broadcaster--stacked li {
+            display: inline
+        }
+
+    .fixture--large .overview .teams {
+        width: 100%
+    }
+
+        .fixture--large .overview .highlightName, .fixture--large .overview .teams.teams--medium {
+            width: 100%
+        }
+
+    .fixture--large .overview .broadcasters {
+        width: 100%
+    }
+
+    .matchFixtureContainer .quickView {
+        display: none
+    }
+
+    .fixtures .matchList.broadcasterMatchlist {
+        border-bottom: 0
+    }
+
+        .fixtures .matchList.broadcasterMatchlist > li {
+            margin-bottom: 2rem
+        }
+}
+
+@media (max-width:1281px) {
+    .fixture--large .overview .teams {
+        width: 55%
+    }
+
+    .fixture .mcBtn {
+        width: 3rem;
+        position: absolute;
+        right: 0;
+        top: 50%;
+        margin-top: -1.5rem;
+        padding: 0 1rem;
+        z-index: 5;
+        text-indent: -99999px
+    }
+
+    a.fixture.live:focus .arrow-right, a.fixture.live:hover .arrow-right {
+        right: 10px
+    }
+
+    a.fixture:hover .referees {
+        color: #eee
+    }
+
+    a.fixture .stadiumName {
+        min-width: 0
+    }
+
+    a.fixture .broadcaster {
+        min-width: 0;
+        padding: 1rem 0
+    }
+}
+
+@media (-webkit-min-device-pixel-ratio:2),(min-resolution:192dpi) {
+    a.fixture:focus .stadium, a.fixture:hover .stadium {
+        background-image: url(../i/sprites/global-sprite@x2.png);
+        background-size: 1107px 1079px
+    }
+}
+
+@media (-webkit-min-device-pixel-ratio:2),(min-resolution:192dpi) {
+    a.fixture:focus .overview > .arrow-right, a.fixture:hover .overview > .arrow-right {
+        background-image: url(../i/sprites/global-sprite@x2.png);
+        background-size: 1107px 1079px
+    }
+}
+
+@media (max-width:1441) {
+    .fixture--large .overview .matchDate {
+        width: 100%
+    }
+}
+
+@media screen and (max-width:480px) {
+    #outercont #innercont {
+        padding: 15px
+    }
+
+    #content-commingsoon {
+        padding: 15px
+    }
+
+}
+/*
+@media screen and (max-width:370px) {
+    .header-menu-item:first-child {
+        display: none;
+    }
+
+    .header-menu-item {
+        width: 80%;
+    }
+}*/
+
+
+
+
+
+/*------------------------*/
+
+.odd-type-group-header-menu {
+    /*padding: 20px 0px 12px 0px;*/
+    border: none;
+    border-bottom: none;
+    background-color: #2c2d34;
+    text-align: center;
+    padding: 10px 0
+}
+
+.mobile-body .odd-type-group-header-menu {
+    padding: 10px 13px 2px 13px;
+    border-top: none;
+    border-bottom: none;
+    /*border-top: 1px solid #F0F2F7*/
+}
+
+.odd-types-in-group-menu-wrapper {
+    padding: 0px;
+    border: none;
+}
+
+@media screen and (max-width: 991px) {
+    .odd-type-group-header-menu {
+        padding: 5px 7px 3px 7px !important;
+    }
+
+    .odd-types-in-group-menu.active {
+        padding: 1px 7px 6px 7px !important;
+    }
+
+    .bet-cell-wrapper .match-odd {
+        padding-right: 8px !important;
+    }
+    .odd-types-in-group-menu-wrapper {
+        padding: 0px 0px;
+        border: none;
+    }
+}
+
+.odd-type-group-header-menu span {
+    height: 30px;
+    width: 160px;
+    background-color: #455A64;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 10px;
+    color: #fff;
+    line-height: 21px;
+    margin: 0px 5px;
+    text-align: center;
+    display: inline-block;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*width: calc(100% / 8 - 6px);*/
+    /*border: 1px solid #D1D2D3;*/
+    border-radius: 4px;
+    text-transform: capitalize;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.mobile-body .odd-type-group-header-menu span {
+    width: 114px;
+}
+
+.match_odds_details_wrapper .odd-type-group-header-menu span {
+    background-color: #1F1F1F;
+}
+
+.odd-type-group-header-menu .selected {
+    background-color: #ffc900;
+    color: #1B2027;
+}
+
+.odd-type-group-header-menu span.selected {
+    background-color: #ffc900;
+    color: #1B2027;
+}
+
+.odd-type-group-header-menu span[data-activeoddcount="0"] {
+    display: none;
+}
+
+
+.odd-type-group[data-activeoddcount="0"] {
+    display: none;
+}
+
+.odd-types-in-group-menu {
+    display: none;
+}
+
+    .odd-types-in-group-menu.active {
+        display: block;
+        padding: 3px 0 3px 0px;
+        border: none;
+    }
+
+.mobile-body .odd-types-in-group-menu.active {
+    display: block;
+    padding: 0px 13px 6px 13px;
+    border-top: none;
+    background-color: #2c2d34 !important
+}
+
+.odd-types-in-group-menu.active .mainOddTypeItem {
+    height: 30px;
+    width: 160px;
+    background-color: #455A64;
+    padding: 5px 20px;
+    cursor: pointer;
+    font-size: 10px;
+    /*font-weight: bold;*/
+    color: #fff;
+    line-height: 20px;
+    margin: 0px 5px;
+    text-align: center;
+    display: inline-block;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*width: calc(100% / 8 - 6px);*/
+    /*border: 1px solid #D1D2D3;*/
+    border-radius: 4px;
+}
+
+.mobile-body .odd-types-in-group-menu.active .mainOddTypeItem {
+    width: 114px;
+}
+
+.odd-types-in-group-menu.active .mainOddTypeItem:hover {
+    background-color: #ffc900;
+    color: #1B2027;
+}
+
+.odd-types-in-group-menu.active .mainOddTypeItem.active {
+    background-color: #ffc900;
+    color: #1B2027;
+}
+
+.header-spread-choose-wrapper-holder {
+    display: block;
+    margin: 0;
+    background-color: #313535;
+}
+
+.odd-types-in-group-menu-wrapper {
+    margin-bottom: 4px;
+}
+
+
+.special-bet-prematch {
+    font-weight: normal !important;
+}
+
+.header-spread-choose-slider-scale {
+    width: 100%;
+}
+
+    .header-spread-choose-slider-scale .slider-scale-min {
+        float: left;
+        margin-left: 7px;
+    }
+
+    .header-spread-choose-slider-scale .slider-scale-max {
+        float: right;
+        margin-right: 7px;
+    }
+
+.mobile-body .header-spread-choose-slider-scale .slider-scale-min {
+    float: left;
+    margin-left: -9px;
+}
+
+.mobile-body .header-spread-choose-slider-scale .slider-scale-max {
+    float: right;
+    margin-right: 5px;
+}
+
+.header-spread-choose-wrapper .slider.slider-horizontal {
+    margin-top: 28px;
+}
+
+    .header-spread-choose-wrapper .slider.slider-horizontal .slider-handle {
+        cursor: pointer;
+    }
+
+.header-spread-choose-wrapper {
+    padding: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 243px;
+}
+
+@media screen and (max-width: 991px) {
+    .fixturesTable tr td.header-spread-choose-wrapper {
+        padding: 0 20px !important;
+        height: 40px;
+        position: unset !important;
+    }
+
+    .header-spread-choose-wrapper {
+        width: 100%;
+    }
+}
+
+
+/* My bets tab with betSlip*/
+
+.ticket_holder_wrapper.ticket-shown .show-ticket,
+.ticket_holder_wrapper.mybets-shown .show-mybets {
+    border-bottom: 3px solid #cd4153;
+    color: #fff;
+}
+
+.ticket_holder_wrapper.mybets-shown #ticket_holder,
+.ticket_holder_wrapper.ticket-shown #mybets_holder {
+    display: none;
+}
+
+.show-ticket,
+.show-mybets {
+    display: inline-block;
+    width: 49%;
+    padding: 5px;
+    text-align: center;
+    font-size: 16px;
+    color: #cd4153;
+    text-transform: capitalize;
+    cursor: pointer;
+}
+
+.ticket-mybets-switch {
+    width: 280px;
+}
+
+/**/
+
+.mobile-body .ticket_holder_wrapper.mybets-shown #ticket_holder_mobile,
+.mobile-body .ticket_holder_wrapper.ticket-shown #mybets_holder {
+    display: none;
+}
+
+.mobile-body .ticket-mybets-switch {
+    padding-bottom: 8px;
+    width: auto !important;
+}
+
+.mobile-body .show-ticket,
+.mobile-body .show-mybets {
+    width: calc(50% - 30px);
+}
+
+.announcement-count-symbol {
+    line-height: 9px;
+    padding: 3px 6px;
+    border-radius: 50%;
+    background-color: #55c9eb;
+    position: absolute;
+    top: 3px;
+    right: 1px;
+    color: #fff;
+}
+
+.mobile-body .announcement-count-symbol {
+    top: -11px;
+    right: 13px;
+}
+
+
+.announcement-count-symbol:empty {
+    display: none;
+}
+
+.select2-dropdown {
+    z-index: 10000;
+}
+
+@media screen and (max-width:1610px) {
+    .divHeaderWrap, .menuWrap {
+        padding-left: 12% !important;
+        padding-right: 12% !important;
+    }
+
+}
+
+.casino-page .casino-games {
+    width: 100%;
+    /*margin: 0 0 0 10px;*/
+}
+
+.casino-page .casino-games.left-margin {
+    width: 100%;
+    margin: 0 0 0 10px;
+}
+
+@media screen and (min-width:1680px) {
+    .casino-page .casino-games {
+        width: 1660px;
+    }
+
+    .squared_images.casino-page .casino-games {
+        width: calc(100% + 15px);
+    }
+}
+
+@media screen and (min-width:1580px) {
+    .squared_images.casino-page .casino-games {
+        width: calc(100% + 15px);
+    }
+}
+
+.new-lenta {
+    position: relative;
+}
+
+    .new-lenta:after {
+        content: "NEW";
+        padding: 3px;
+        position: absolute;
+        top: -10px;
+        right: 0;
+        background-color: #495FE8;
+        color: #fff;
+        line-height: 1;
+        font-size: 14px;
+    }
+
+.marmara-main-menu-mobile .new-lenta {
+    position: relative;
+    z-index:1;
+}
+
+    .marmara-main-menu-mobile .new-lenta:after {
+        content: "NEW";
+        padding: 3px;
+        position: absolute;
+        top: 2px;
+        right: auto;
+        left:-45px;
+        background-color: #495FE8;
+        color: #fff;
+        line-height: 1;
+        font-size: 14px;
+        z-index: -1;
+
+    }
+
+
+.div-system-type-wrapper .div-system-type {
+    width: calc(100% - 38px);
+    display: inline-block;
+}
+.div-system-type-wrapper .div-system-type-calculations {
+    width: 37px;
+    display: inline-block;
+    float: right;
+    padding: 7px;
+}
+
+.div-system-type-calculations .calculations-content {
+    display: none; 
+    width: 260px;
+    min-height: 220px;
+    position: fixed;
+    bottom: 30vh;
+    right: 270px;
+    background: #3e4343;
+    border: solid 2px #313535;
+}
+
+.mobile-body .div-system-type-calculations .calculations-content-wrapper {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0,0,0,0.7);
+}
+
+.mobile-body .div-system-type-calculations .calculations-content {
+    display: none;
+    width: 96%;
+    min-height: 220px;
+    position: fixed;
+    top: 1vh;
+    bottom: auto;
+    right: 2%;
+    background: #F0F2F7;
+    border: solid 2px #F0F2F7;
+    border-radius: 4px;
+}
+
+.div-system-type-calculations .calculations-content.shown,
+.div-system-type-calculations .calculations-content-wrapper.shown,
+.div-system-type-calculations .calculations-content-wrapper.shown .calculations-content {
+    display: block;
+}
+
+.div-system-type-calculations .calculations-icon {
+    color: #495FE8;
+    cursor: pointer;
+}
+
+.c-header {
+    padding: 5px;
+    background-color: #495FE8;
+}
+    .c-header .c-close-btn {
+        float:right;
+        cursor: pointer;
+    }
+
+.c-bet-list {
+    background-color: #F0F2F7 !important;
+}
+
+.c-summery {
+    background-color: #F0F2F7 !important;
+}
+
+.c-bet-list,
+.c-summery {
+    padding: 5px;
+    float: left;
+    width: 100%;
+    color: #181818
+}
+    .c-summery div {
+        background-color: #F0F2F7 !important;
+    }
+.c-bet-list .c-bet-list-item {
+    float: left;
+    width: 100%;
+    padding: 2px;
+}
+    .c-bet-list .c-item-no {
+        width: 10%;
+        display: inline-block;
+        float: left;
+    }
+    .c-bet-list .c-item-quote {
+        width: 30%;
+        color: #181818;
+        display: inline-block;
+        float: left;
+    }
+    .c-bet-list .c-item-won,
+    .c-bet-list .c-item-lost,
+    .c-bet-list .c-item-void {
+        width: 20%;
+        position: relative;
+        display: inline-block;
+        float: left;
+    }
+.c-bet-list-header div {
+    text-align: center;
+}
+.c-bet-list-item div {
+    display: inline-block;
+    float: left;
+    text-align: center;
+}
+    .c-bet-list-item div .c-item-check {
+        width: 18px;
+        height: 18px;
+        background-color: #495FE8;
+        border-radius: 50%;
+        cursor: pointer;
+        margin-left: calc(50% - 9px);
+        position: relative;
+    }
+
+    .c-bet-list-item div.checked .c-item-check:after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        background-color: #fff;
+        border-radius: 50%;
+        box-shadow: 1px 1px 6px #f17272;
+    }
+
+@media screen and (max-width: 1450px) and (min-width: 1320px) {
+    /*.trMatch .betColumn .match-odd {
+        width: 58px;
+    }
+
+
+    .table tr th label, .table tr th span {
+        width: 67px !important;
+    }
+
+    .header_width_columns_3 {
+        min-width: 209px
+    }
+
+    .match_odds_visibility {
+        width: 66px !important;
+    }
+*/
+    .competitor1-name, .competitor2-name {
+        /*max-width: 170px !important;
+        font-size: 16px;*/
+    }
+
+    /*.xsBetColumnHeader .betColumnHeader label, .betColumn label {
+        margin: 10px 5px 10px 5px !important;
+    }
+
+    .live_match_list_header .header_width_columns_3 {
+        min-width: 205px;
+    }*/
+}

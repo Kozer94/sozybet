@@ -1,0 +1,40 @@
+﻿
+@media screen and (max-width:991px) {
+
+    .divHeaderWrap, body {
+        background-color: #16171a !important
+    }
+
+    .menu {
+        background-color: #313535 !important
+    }
+
+    .divHeaderWrap {
+        border-bottom: 1px solid #343039
+    }
+
+    .modal-header .close {
+        color: #fff !important;
+        opacity: 0.8 !important
+    }
+}
+
+@media screen and (min-width:992px) {
+
+    body {
+        background-color: #16171a !important
+    }
+
+    /*.menu {
+        background-color: #035BDF !important
+    }*/
+
+
+    .modal-header .close {
+        opacity: 0.8 !important
+    }
+}
+
+#resendEmail{
+    color: #282828;
+}
